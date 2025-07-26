@@ -23,6 +23,10 @@ Path outputLocation = ...
 Path convertBatLocation = ...
 Path texConvLocation = ...
 
+//Export the bat file if you havent done so previously
+ToolsUnpacker up = new ToolsUnpacker ( );
+up.exportBat ( convertBatLocation );
+
 GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true ); //false boolean is for duplication, not working yet. true is for overwrite.
 Optional < File >  opt = gppk.extractUIImagesTXT( contentLocation, outputLocation ); //The uiimages.txt must be extracted first in the event of extracting EVERYTHING
 
