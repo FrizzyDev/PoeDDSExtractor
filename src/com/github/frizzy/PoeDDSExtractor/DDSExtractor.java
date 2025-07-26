@@ -85,10 +85,9 @@ public class DDSExtractor {
                                             if ( extracted.exists( ) ) {
                                                 if ( !allTextures.containsKey( pngFile ) ) {
                                                     allTextures.put( pngFile , new ArrayList <>( ) );
-                                                } else {
-                                                    List < File > list = allTextures.get( pngFile );
-                                                    list.add( extracted );
                                                 }
+
+                                                allTextures.get( pngFile ).add( extracted );
                                             }
                                         } ,
                                         ( ) -> {
@@ -125,7 +124,7 @@ public class DDSExtractor {
 
                     for ( String line : coordinateLines ) {
 
-                        String textureName = line.substring( 1 , line.indexOf( " " ) - 1 );
+                        String textureName = line.substring( 1 , line.indexOf( "\" " )  );
 
                         int[] coords = GPPKUtils.getCoordinatesFrom( line );
 
@@ -236,7 +235,10 @@ public class DDSExtractor {
             String line;
             while ( ( line = bReader.readLine( ) ) != null ) {
                 if ( line.toLowerCase( ).contains( sourcePath.toLowerCase(  ) ) ) {
-                    coordinateLines.add( line );
+
+                    if ( !coordinateLines.contains( line ) ) {
+                        coordinateLines.add( line );
+                    }
                 }
             }
         } catch ( IOException | NullPointerException e ) {

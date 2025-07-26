@@ -120,7 +120,7 @@ public class Test {
 
     /**
      * Extracts all .dds files, converts all files, then extracts all textures from each png file.
-     * This takes a couple of hours.
+     * This can take a few hours.
      * @throws FileNotFoundException
      */
     public static void allTest ( ) throws FileNotFoundException {
@@ -202,7 +202,8 @@ public class Test {
     public static List < String > buildWantedFiles( ) {
         List < String > wantedFiles = new ArrayList <>( );
 
-        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/1.dds" );
+        wantedFiles.add( "Art/Textures/Interface/2D/2DArt/UIImages/InGame/Necropolis/Pack Icons/3.dds" );
+//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/1.dds" );
 //        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/2.dds" );
 //        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/3.dds" );
 //        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/5.dds" );

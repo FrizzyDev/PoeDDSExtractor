@@ -88,7 +88,7 @@ public class DDSConverter {
                         LOGGER.log( Level.WARNING, "No file was returned. dds file: " + ddsFile.getName() + " was not converted." );
                         LOGGER.log( Level.WARNING, "This likely means executeConvert ( ) failed." );
                     } );
-                } else if ( pngFile.exists() && overwrite ) {
+                } else if ( pngFile.exists() && !overwrite ) {
                     convertedFiles.add( pngFile );
                 }
             }

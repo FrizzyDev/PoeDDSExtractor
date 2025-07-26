@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -64,7 +63,7 @@ public class GPPKUtils {
             String line;
             while ( ( line = bReader.readLine( ) ) != null ) {
                 if ( line.toLowerCase( ).contains( gppkDDSFilePath.toLowerCase(  ) ) ) {
-                    String textureName = line.substring( 1 , line.indexOf( " " ) - 1 );
+                    String textureName = line.substring( 1 , line.indexOf( "\" " )  );
 
                     if ( !textures.contains( textureName ) ) {
                         textures.add( textureName );
