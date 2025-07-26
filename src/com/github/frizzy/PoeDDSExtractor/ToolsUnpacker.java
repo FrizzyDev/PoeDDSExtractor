@@ -33,6 +33,20 @@ public class ToolsUnpacker {
     }
 
     /**
+     * Exports the convert.bat file to the specified directory/file.
+     * <br>
+     * I was original here! I didn't copy it from Stack overflow
+     */
+    public void exportBat ( Path out ) {
+        final String resource = "/com/github/frizzy/PoeDDSExtractor/Resources/convert.bat";
+        try ( InputStream is = ToolsUnpacker.class.getResourceAsStream( resource ) ) {
+            Files.copy( is, out );
+        } catch ( IOException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+        }
+    }
+
+    /**
      * Downloads LibGPPK windows release and returns the path on disk.
      * <br>
      * <a href="https://stackoverflow.com/questions/13441720/download-binary-file-from-github-using-java">Stack Overflow</a>

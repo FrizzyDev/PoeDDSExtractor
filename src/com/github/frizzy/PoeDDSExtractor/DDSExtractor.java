@@ -168,8 +168,8 @@ public class DDSExtractor {
 
         /*
          * In case a .dds file is passed, we get the .png file if it exists. ImageIO cannot read .dds files.
-         * I have found and ImageIO library that reads .dds files. I'll eventually include it as a dependency
-         * and may be able to cut out texconv completely, but I got here without it, lol.
+         * In the event someone else looks at this, the TwelveMonkeys ImageIO plugin library cannot read the .dds
+         * files as it does not support the correct format.
          */
         if ( pngFile.getName().contains( ".dds" ) ) {
             pngFile = new File( pngFile.getAbsolutePath().replace( ".dds", ".png" ) );

@@ -136,6 +136,10 @@ public class Test {
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
 
+        ToolsUnpacker up = new ToolsUnpacker();
+        up.exportBat( convertBatLocation );
+        System.exit( 0 );
+
         GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
         Optional < File > opt = gppk.extractUIImagesTXT( contentLocation , outputLocation );
         opt.ifPresent( uiimagestxt -> {
