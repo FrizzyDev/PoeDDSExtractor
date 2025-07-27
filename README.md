@@ -54,3 +54,6 @@ I'm pretty positive there is still some texture extraction issues to iron out, b
 If anyone has ideas, fixes, or recommendations, I am always all ears and appreciate it. I'd like to add that I am not a professional developer and I do this in my spare time as a hobby. I do not promise there isn't any questionable code in the library, especially since I've asked myself WTF? why did I do that?
 multiple times already, but such is life, as is learning.
 
+I would like to dig in and see if I can figure out how to decode the .dds format PoE uses straight from Java. That'll cut out texconv.exe and maybe speed up a portion of the library. [TwelveMonkeys](https://github.com/haraldk/TwelveMonkeys) supports multiple .dds formats except for the one PoE uses ( of course ). Maybe at some
+point I'll spend some time working towards adding a plugin. I'm also considering building a UI.
+
