@@ -74,6 +74,10 @@ public class DDSConverter {
         File converterOutLoc = null;
         List < File > convertedFiles = new ArrayList <>(  );
 
+        DDSProgressHook.setStep( "Converting .dds files." );
+        DDSProgressHook.setValues( 0, ddsFiles.size() );
+
+        int processed = 0;
         for ( File ddsFile : ddsFiles ) {
             if ( ddsFile.getName().endsWith( ".dds" ) ) {
                 File pngFile = new File( ddsFile.getAbsolutePath().replace( ".dds", ".png" ) );
@@ -112,6 +116,8 @@ public class DDSConverter {
             }
         }
 
+        processed++;
+        DDSProgressHook.updateCurrentValue( processed );
         return convertedFiles;
     }
 

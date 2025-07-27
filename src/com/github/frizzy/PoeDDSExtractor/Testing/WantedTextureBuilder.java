@@ -1,0 +1,320 @@
+package com.github.frizzy.PoeDDSExtractor.Testing;
+
+import java.awt.image.AreaAveragingScaleFilter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class WantedTextureBuilder {
+
+    private List < File > convertedFiles;
+
+    public WantedTextureBuilder ( List < File > convertedFiles ) {
+        this.convertedFiles = convertedFiles;
+    }
+
+    public Map < File, List < String > > buildWantedTextures ( ) throws IOException {
+        Map < File, List < String > > map = new HashMap <>(  );
+
+        for ( File pngFile : convertedFiles ) {
+            File pathTxt = new File( pngFile.getParentFile().getAbsolutePath() + File.separator + "path.txt" );
+
+            if ( pathTxt.exists() ) {
+                String path = Files.readString( pathTxt.toPath() );
+
+                switch ( path ) {
+                    case "art/textures/interface/2d/2dart/uiimages/common/4k/1.dds" -> {
+                        map.put( pngFile, getWanted4k1DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/common/4k/2.dds" -> {
+                        map.put( pngFile, getWanted4k2DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/common/4k/3.dds" -> {
+                        map.put( pngFile, getWanted4k3DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/4k/6.dds" -> {
+                        map.put( pngFile, getWanted4k6DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/4k/11.dds"  -> {
+                        map.put( pngFile, getWanted4k11DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/1.dds" -> {
+                        map.put( pngFile, getWanted1DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/2.dds" -> {
+                        map.put( pngFile, getWanted2DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/3.dds" -> {
+                        map.put( pngFile, getWanted3DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/4.dds" -> {
+                        map.put( pngFile, getWanted4DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/5.dds" -> {
+                        map.put( pngFile, getWanted5DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/7.dds" -> {
+                        map.put( pngFile, getWanted7DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/10.dds" -> {
+                        map.put( pngFile, getWanted10DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/13.dds" -> {
+                        map.put( pngFile, getWanted13DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/15.dds" -> {
+                        map.put( pngFile, getWanted15DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/16.dds" -> {
+                        map.put( pngFile, getWanted16DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/17.dds" -> {
+                        map.put( pngFile, getWanted17DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/1.dds" -> {
+                        map.put( pngFile, getWantedM1DDSTextures() );
+                    }
+                    case "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/2.dds" -> {
+                        map.put( pngFile, getWantedM2DDSTextures() );
+                    }
+                }
+            }
+        }
+
+        return map;
+    }
+
+    public List < String > getWanted4k1DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/LoadingScreenGear" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonTickPressed" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonTickNormal" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonTickHover" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/CheckBoxUnchecked" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/WindowTitlebarRight" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/WindowTitlebarLeft" );
+
+        return textures;
+    }
+
+    public List < String > getWanted4k2DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/WindowTitlebarMiddle" );
+
+        return textures;
+    }
+
+    public List < String > getWanted4k3DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonCloseHover" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonCloseDown" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonCloseNormal" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenPressedMiddle" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenPressedLeft" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenPressedRight" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenHoverMiddle" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenHoverLeft" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenHoverRight" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenNormalRight" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenNormalMiddle" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGreenNormalRight" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericHoverLeft" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericHoverMiddle" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericHoverRight" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericNormalLeft"  );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericNormalMiddle" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericNormalRight" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericPressedLeft" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericPressedMiddle" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/ButtonGenericPressedRight" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/CheckBoxChecked2Middle" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/CheckBoxChecked2Right" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/CheckBoxChecked2Left" );
+
+        textures.add( "Art/2DArt/UIImages/Common/4K/CheckBoxUnchecked2Right" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/CheckBoxUnchecked2Left" );
+        textures.add( "Art/2DArt/UIImages/Common/4K/CheckBoxUnchecked2Middle" );
+
+        return textures;
+    }
+
+    public List < String > getWanted4k6DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/4K/ItemsBackground2x3" );
+        textures.add( "Art/2DArt/UIImages/InGame/4K/MicrotransactionsPopUpHeaderBackground" );
+
+        return textures;
+    }
+
+    public List < String > getWanted4k11DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/4K/Tick" );
+        textures.add( "Art/2DArt/UIImages/InGame/4K/Cross" );
+
+        return textures;
+    }
+
+    public List < String > getWanted1DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/VendorBuy" );
+        textures.add( "Art/2DArt/UIImages/InGame/AtlasMissionNotification" );
+        textures.add( "Art/2DArt/UIImages/InGame/AtlasWatchstoneBacking" );
+
+
+        return textures;
+    }
+
+    public List < String > getWanted2DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/RecipeUnlockedBG" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber7" );
+        textures.add( "Art/2DArt/UIImages/InGame/VendorSell" );
+
+        return textures;
+    }
+
+    public List < String > getWanted3DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/InvExpandNormal" );
+        textures.add( "Art/2DArt/UIImages/InGame/InvExpandHover" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber8" );
+
+        return textures;
+    }
+
+    public List < String > getWanted4DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/ApplyChangesButtonFrame" );
+        textures.add( "Art/2DArt/UIImages/InGame/AtlasObjectiveBacking" );
+        textures.add( "Art/2DArt/UIImages/InGame/UnlockedFavouredMapNotification" );
+
+        return textures;
+    }
+
+    public List < String > getWanted5DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/InvExpandPressed" );
+        textures.add( "Art/2DArt/UIImages/InGame/InvCollapseNormal" );
+
+        return textures;
+    }
+
+    public List < String > getWanted7DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/InvCollapseHover" );
+        textures.add( "Art/2DArt/UIImages/InGame/InvCollapsePressed" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber9" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber0" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber1" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber2" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber3" );
+        textures.add( "Art/2DArt/UIImages/InGame/RNumber4" );
+
+        return textures;
+    }
+
+    public List < String > getWanted10DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/Number3" );
+        textures.add( "Art/2DArt/UIImages/InGame/WardrobeDeleteOutfitBacking" );
+        textures.add( "Art/2DArt/UIImages/InGame/WardrobeSaveOutfitBacking" );
+
+        return textures;
+    }
+
+    public List < String > getWanted13DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/Number9" );
+        textures.add( "Art/2DArt/UIImages/InGame/Number8" );
+        textures.add( "Art/2DArt/UIImages/InGame/Number7" );
+
+
+        return textures;
+    }
+
+    public List < String > getWanted15DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/Number4" );
+        textures.add( "Art/2DArt/UIImages/InGame/Number1" );
+        textures.add( "Art/2DArt/UIImages/InGame/Number0" );
+        textures.add( "Art/2DArt/UIImages/InGame/MemoryButtonUnavailable" );
+        textures.add( "Art/2DArt/UIImages/InGame/MemoryButtonHover" );
+        textures.add( "Art/2DArt/UIImages/InGame/MemoryButtonClicked" );
+        textures.add( "Art/2DArt/UIImages/InGame/MemoryButtonNormal" );
+        textures.add( "Art/2DArt/UIImages/InGame/ButtonStashUnlockPressed" );
+
+        return textures;
+    }
+
+    public List < String > getWanted16DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/ButtonStashLockHover" );
+        textures.add( "Art/2DArt/UIImages/InGame/ButtonStashUnlockHover" );
+        textures.add( "Art/2DArt/UIImages/InGame/ButtonStashLockPressed");
+        textures.add( "Art/2DArt/UIImages/InGame/ButtonStashLockNormal" );
+
+        return textures;
+    }
+
+    public List < String > getWanted17DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/WardrobeDeleteOutfitButtonHighlight" );
+        textures.add( "Art/2DArt/UIImages/InGame/WardrobeDeleteOutfitButtonDefault" );
+        textures.add( "Art/2DArt/UIImages/InGame/WardrobeDeleteOutfitButtonClicked" );
+
+        textures.add( "Art/2DArt/UIImages/InGame/WebFilterButtonDefault" );
+        textures.add( "Art/2DArt/UIImages/InGame/WebFilterButtonHighlight" );
+        textures.add( "Art/2DArt/UIImages/InGame/WebFilterButtonPressed" );
+
+        return textures;
+    }
+
+    public List < String > getWantedM1DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedPressedLeft" );
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedPressedMiddle" );
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedHoverMiddle" );
+
+        return textures;
+    }
+
+    public List < String > getWantedM2DDSTextures ( ) {
+        List < String > textures = new ArrayList <>(  );
+
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedHoverLeft" );
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedNormalLeft" );
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedNormalMiddle" );
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedNormalRight" );
+        textures.add( "Art/2DArt/UIImages/InGame/Marketplace/ButtonRedHoverRight" );
+
+        return textures;
+    }
+}

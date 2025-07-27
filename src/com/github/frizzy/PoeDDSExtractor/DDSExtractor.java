@@ -37,7 +37,7 @@ public class DDSExtractor {
     /**
      * @param txtFile The uiimages.txt or uidivinationimages.txt file the texture name, path, and coordinate information is retrieved from.
      */
-    public DDSExtractor( File txtFile, boolean overwrite ) {
+    public DDSExtractor( File txtFile , boolean overwrite ) {
         this.txtFile = txtFile;
         this.overwrite = overwrite;
     }
@@ -60,6 +60,10 @@ public class DDSExtractor {
         Iterator < File > it = wantedTextures.keySet( ).iterator( );
 
         if ( wantedTextures != null && !wantedTextures.isEmpty( ) ) {
+            DDSProgressHook.setStep( "Extracting wanted textures." );
+            DDSProgressHook.setValues( 0, wantedTextures.size() );
+
+            int processed = 0;
             while ( it.hasNext( ) ) {
                 File pngFile = it.next( );
                 List < String > textures = wantedTextures.get( pngFile );
@@ -76,7 +80,7 @@ public class DDSExtractor {
                     for ( String line : coordinateLines ) {
 
                         for ( String textureName : textures ) {
-                            if ( line.toLowerCase( ).contains( textureName.toLowerCase(  ) ) ) {
+                            if ( line.toLowerCase( ).contains( textureName.toLowerCase( ) ) ) {
 
                                 int[] coords = GPPKUtils.getCoordinatesFrom( line );
 
@@ -97,6 +101,9 @@ public class DDSExtractor {
                         }
                     }
                 }
+
+                processed++;
+                DDSProgressHook.updateCurrentValue( processed );
             }
         }
 
@@ -116,6 +123,10 @@ public class DDSExtractor {
         Map < File, List < File > > allTextures = new HashMap <>( );
 
         if ( extractedFiles != null && !extractedFiles.isEmpty( ) ) {
+            DDSProgressHook.setStep( "Extracting textures from .dds files." );
+            DDSProgressHook.setValues( 0 , extractedFiles.size( ) );
+
+            int processed = 0;
             for ( File pngFile : extractedFiles ) {
                 final String sourcePath = GPPKUtils.getSourcePath( pngFile );
 
@@ -124,7 +135,7 @@ public class DDSExtractor {
 
                     for ( String line : coordinateLines ) {
 
-                        String textureName = line.substring( 1 , line.indexOf( "\" " )  );
+                        String textureName = line.substring( 1 , line.indexOf( "\" " ) );
 
                         int[] coords = GPPKUtils.getCoordinatesFrom( line );
 
@@ -145,7 +156,10 @@ public class DDSExtractor {
                     }
 
                 }
-                }
+
+                processed++;
+                DDSProgressHook.updateCurrentValue( processed );
+            }
         }
 
         return allTextures;
@@ -164,42 +178,42 @@ public class DDSExtractor {
      */
     private Optional < File > extract( int x1 , int x2 , int y1 , int y2 , File pngFile , String textureName ) {
         if ( pngFile == null )
-            return Optional.empty();
+            return Optional.empty( );
 
         /*
          * In case a .dds file is passed, we get the .png file if it exists. ImageIO cannot read .dds files.
          * In the event someone else looks at this, the TwelveMonkeys ImageIO plugin library cannot read the .dds
          * files as it does not support the correct format.
          */
-        if ( pngFile.getName().contains( ".dds" ) ) {
-            pngFile = new File( pngFile.getAbsolutePath().replace( ".dds", ".png" ) );
+        if ( pngFile.getName( ).contains( ".dds" ) ) {
+            pngFile = new File( pngFile.getAbsolutePath( ).replace( ".dds" , ".png" ) );
 
-            if ( !pngFile.exists() ) {
-                LOGGER.log( Level.WARNING, "File: " + pngFile.getAbsolutePath() + " does not exist." );
-                return Optional.empty();
+            if ( !pngFile.exists( ) ) {
+                LOGGER.log( Level.WARNING , "File: " + pngFile.getAbsolutePath( ) + " does not exist." );
+                return Optional.empty( );
             }
         }
 
         try {
-            LOGGER.log( Level.INFO, "Reading file: " + pngFile );
-            BufferedImage parent = ImageIO.read( pngFile  );
+            LOGGER.log( Level.INFO , "Reading file: " + pngFile );
+            BufferedImage parent = ImageIO.read( pngFile );
 
             if ( parent != null ) {
-                LOGGER.log( Level.INFO, "Extracting texture: " + textureName );
+                LOGGER.log( Level.INFO , "Extracting texture: " + textureName );
                 BufferedImage extracted = parent.getSubimage( x1 , y1 , x2 , y2 );
 
                 String subbedName = textureName.substring( textureName.lastIndexOf( "/" ) );
                 File extractedFile = new File( pngFile.getParentFile( ).getAbsolutePath( ) + File.separator + subbedName + ".png" );
 
-                if ( extractedFile.exists() && overwrite || !extractedFile.exists() ) {
-                    completeWrite( extracted, extractedFile, textureName );
+                if ( extractedFile.exists( ) && overwrite || !extractedFile.exists( ) ) {
+                    completeWrite( extracted , extractedFile , textureName );
                 } else {
-                    LOGGER.log( Level.INFO, "Overwrite is false and file already exists. Image was not saved." );
+                    LOGGER.log( Level.INFO , "Overwrite is false and file already exists. Image was not saved." );
                 }
 
                 return Optional.of( extractedFile );
             } else {
-                LOGGER.log( Level.WARNING, "Parent image was null, no textures can be extracted." );
+                LOGGER.log( Level.WARNING , "Parent image was null, no textures can be extracted." );
             }
 
         } catch ( IOException | RasterFormatException e ) {
@@ -212,13 +226,13 @@ public class DDSExtractor {
     /**
      * Completes the image write process when a texture has been extracted from the parent .png file.
      */
-    private void completeWrite ( BufferedImage extractedImg, File extractedFile, String textureName )  {
+    private void completeWrite( BufferedImage extractedImg , File extractedFile , String textureName ) {
         try {
-            LOGGER.log( Level.INFO, "Extracting texture to: " + extractedFile.getAbsolutePath() );
+            LOGGER.log( Level.INFO , "Extracting texture to: " + extractedFile.getAbsolutePath( ) );
             ImageIO.write( extractedImg , "png" , extractedFile );
             LOGGER.log( Level.INFO , "Extracted texture: " + textureName + " was saved to: " + extractedFile.getAbsolutePath( ) + "." );
         } catch ( IOException e ) {
-            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+            LOGGER.log( Level.SEVERE , e.getMessage( ) , e );
         }
     }
 
@@ -234,7 +248,7 @@ public class DDSExtractor {
         try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( new FileInputStream( txtFile ) , StandardCharsets.UTF_16LE ) ) ) {
             String line;
             while ( ( line = bReader.readLine( ) ) != null ) {
-                if ( line.toLowerCase( ).contains( sourcePath.toLowerCase(  ) ) ) {
+                if ( line.toLowerCase( ).contains( sourcePath.toLowerCase( ) ) ) {
 
                     if ( !coordinateLines.contains( line ) ) {
                         coordinateLines.add( line );

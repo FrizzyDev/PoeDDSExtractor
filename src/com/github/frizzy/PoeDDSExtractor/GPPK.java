@@ -119,6 +119,10 @@ public class GPPK {
             return extracted;
         }
 
+        DDSProgressHook.setStep( "Extracting wanted .dds files." );
+        DDSProgressHook.setValues( 0, wantedFiles.size() );
+
+        int processed = 0;
         for ( String wf : wantedFiles ) {
             try {
                 Optional < File > ef = extractFile( contentPath, outputPath, wf );
@@ -128,6 +132,10 @@ public class GPPK {
             } catch ( IOException e ) {
                 LOGGER.log( Level.SEVERE, e.getMessage() );
             }
+
+            processed++;
+
+            DDSProgressHook.updateCurrentValue( processed );
         }
 
         return extracted;
@@ -219,6 +227,9 @@ public class GPPK {
      * @param outputPath The path the uiimages.txt file will be extracted to.
      */
     public Optional < File > extractUIImagesTXT ( Path contentPath, Path outputPath ) {
+        DDSProgressHook.setStep( "Extracting uiimages.txt" );
+        DDSProgressHook.setValues( 0, 1 );
+
         try {
             Optional < File > opt = extractFile ( contentPath, outputPath, UIIMAGES_TXT_LOC );
             opt.orElseThrow( ( ) -> new NoSuchFileException( "No file was returned. uiimages.txt was not extracted." ) );
@@ -228,6 +239,7 @@ public class GPPK {
             LOGGER.log( Level.SEVERE, e.getMessage(), e );
         }
 
+        DDSProgressHook.updateCurrentValue( 1 );
         return Optional.empty();
     }
 
@@ -237,6 +249,9 @@ public class GPPK {
      * @param outputPath The path the uidivinationimages.txt file will be extracted to.
      */
     public Optional < File > extractUIDivinationImagesTXT ( Path contentPath, Path outputPath ) {
+        DDSProgressHook.setStep( "Extracting uiimages.txt" );
+        DDSProgressHook.setValues( 0, 1 );
+
         try {
             Optional < File >  opt = extractFile ( contentPath, outputPath, UIDIVINATION_TXT_LOC );
             opt.orElseThrow( ( ) -> new NoSuchFileException( "No file was returned. uidivinationimages.txt was not extracted." ) );
@@ -246,6 +261,7 @@ public class GPPK {
             LOGGER.log( Level.SEVERE, e.getMessage(), e );
         }
 
+        DDSProgressHook.updateCurrentValue( 1 );
         return Optional.empty();
     }
 

@@ -1,4 +1,6 @@
-package com.github.frizzy.PoeDDSExtractor;
+package com.github.frizzy.PoeDDSExtractor.Testing;
+
+import com.github.frizzy.PoeDDSExtractor.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class Test {
 
     public static void main( String[] args ) throws IOException {
-        allTest();
+        getSpecificFiles();
     }
 
     public static void gatherPNGTest ( ) throws FileNotFoundException {
@@ -54,6 +56,9 @@ public class Test {
         Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
 
         GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
+        /*
+         * Anytime you read the uiimages.txt file, make sure the encoding is set to StandardCharsets.UTF_16LE
+         */
         Optional < File >  opt = gppk.extractUIImagesTXT( contentLocation, outputLocation );
         Map < File , List < String > > allTextures = new HashMap <>(  );
 
@@ -169,7 +174,7 @@ public class Test {
         Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
         Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
-        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
+        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test " );
 
         try {
             GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
@@ -178,13 +183,13 @@ public class Test {
             List < File > extractedFiles = gppk.extract( contentLocation , outputLocation , wantedFiles );
             List < File > converted = converter.convert( extractedFiles );
 
-            System.out.println( "Converted size: " + converted.size( ) );
-
             Optional < File > uiimagesTxt = gppk.extractUIImagesTXT( contentLocation , outputLocation );
 
             uiimagesTxt.ifPresentOrElse( txtFile -> {
                 DDSExtractor extractor = new DDSExtractor( txtFile , false );
-                Map < File, List < File > > allTextures = extractor.extractAllSubTextures( converted );
+                Map < File, List < String > > wantedTextures = getWantedTexturesFor( converted );
+
+                Map < File, List < File > > allTextures = extractor.extractSubTextures( wantedTextures );
 
                 //do what you want with textures here
             }, ( ) -> {
@@ -200,36 +205,39 @@ public class Test {
         long elapsedTime = endTime - startTime;
 
         System.out.println( "Total execution time for " + wantedFiles.size() + " .dds files and all sub textures extracted: " );
-        System.out.println( TimeUnit.SECONDS.convert( elapsedTime , TimeUnit.NANOSECONDS ) + " seconds" );
+        System.out.println( getHumanReadableTime( elapsedTime ) );
+    }
+
+    public static Map < File, List < String > > getWantedTexturesFor ( List < File > pngFiles ) {
+        WantedTextureBuilder builder = new WantedTextureBuilder( pngFiles  );
+        try {
+            return builder.buildWantedTextures();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     public static List < String > buildWantedFiles( ) {
         List < String > wantedFiles = new ArrayList <>( );
 
-        wantedFiles.add( "Art/Textures/Interface/2D/2DArt/UIImages/InGame/Necropolis/Pack Icons/3.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/1.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/2.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/3.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/5.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/6.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/7.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/9.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/11.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/14.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/15.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/1.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/2.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/3.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/5.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/7.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/13.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/10.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/15.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/16.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/17.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/1.dds" );
-//        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/2.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/1.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/2.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/common/4k/3.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/6.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4k/11.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/1.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/2.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/3.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/4.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/5.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/7.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/13.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/10.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/15.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/16.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/17.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/1.dds" );
+        wantedFiles.add( "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/2.dds" );
 
 
         return wantedFiles;
