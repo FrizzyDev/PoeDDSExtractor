@@ -10,6 +10,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * A utility class to help with a couple of things in PoeDDSExtractor.
+ *
+ * @author Frizzy
+ * @version 0.0.1
+ * @since 0.0.1
+ */
 public class GPPKUtils {
 
     private static final Logger LOGGER = Logger.getLogger( GPPKUtils.class.getName() ) ;
@@ -18,14 +25,11 @@ public class GPPKUtils {
 
     }
 
+    /**
+     * Adds all the File keys to a list.
+     */
     public static List < File > getFilesFromMap ( Map < File, List < String > > map ) {
-        List < File > files = new ArrayList <>(  );
-
-        for ( File file : map.keySet( ) ) {
-            files.add( file );
-        }
-
-        return files;
+        return new ArrayList <>( map.keySet( ) );
     }
 
     /**
@@ -91,7 +95,7 @@ public class GPPKUtils {
         coords [ 1 ] = Integer.parseInt( split[ 1 ] ); // y
 
         /*
-         * If subtracting x1 from x2 or y1 from y2 then the x2 or y2 is likely
+         * If subtracting x1 from x2 or y1 from y2 is less than or equal to 0, then the x2 or y2 is likely
          * the same as x1 or y1.
          */
         if ( Integer.parseInt( split [ 2 ] ) - coords [ 0 ]  <= 0 ) {

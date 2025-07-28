@@ -43,10 +43,27 @@ public class GPPK {
      */
     private File gppkExe;
 
+    /**
+     * The path to the Content.gppk file.
+     */
+    private Path contentPath;
+
+    /**
+     * Boolean flag determining if previously extracted .dds files should be overwritten.
+     * <br>
+     * Setting this to true has a huge performance improvement. Unless your extracted .dds files
+     * are corrupted or modified, and you want to replace them, I would always set this to true.
+     */
     private boolean overwrite;
 
+    /**
+     * Unused currently.
+     */
     private boolean duplicate;
 
+    /**
+     * Unused currently.
+     */
     private int duplicateValue = 2;
 
     /**
@@ -59,8 +76,12 @@ public class GPPK {
      */
     public GPPK ( final String gppkPath, Path contentPath, boolean duplicate, boolean overwrite ) throws FileNotFoundException {
         Optional < File > opt = getGPPKExe( gppkPath );
-        gppkExe = opt.orElseThrow( ( ) -> new FileNotFoundException ( "" ) );
+        gppkExe = opt.orElseThrow( ( ) -> new FileNotFoundException ( "GPPK exe was not found." ) );
 
+        if ( !contentPath.toFile().exists() )
+            throw new FileNotFoundException( "Content.gppk was not found" );
+
+        this.contentPath = contentPath;
         this.overwrite = overwrite;
     }
 
@@ -87,12 +108,11 @@ public class GPPK {
      * <br>
      * As a side note, LibGGPK3 is not thread-safe. Do not execute this function on more than one thread.
      *
-     * @param contentPath The path to the content.gppk file.
      * @param outputPath The output directory where extracted .dds files and related files will be extracted to.
      * @param wantedFiles The internal content.gppk file paths for the wanted .dds files.
      * @return A list of the extracted .dds files.
      */
-    public List < File > extract ( final Path contentPath, final Path outputPath, List< String > wantedFiles ) {
+    public List < File > extract ( final Path outputPath, List< String > wantedFiles ) {
         /*
          * The directories containing the extracted .dds files.
          * Extracted .dds files will be stored in their own directory
@@ -125,7 +145,7 @@ public class GPPK {
         int processed = 0;
         for ( String wf : wantedFiles ) {
             try {
-                Optional < File > ef = extractFile( contentPath, outputPath, wf );
+                Optional < File > ef = extractFile( outputPath, wf );
                 ef.ifPresentOrElse( a -> extracted.add( ef.get( ) ) , ( ) -> {
                     LOGGER.log( Level.WARNING, "No file was returned. .dds file for: " + wf + " was not extracted." );
                 } );
@@ -154,7 +174,7 @@ public class GPPK {
      * <br>
      * I will do some profiling at some point to see if the process can be sped up within this code.
      */
-    public Map < File, List < String > > extractEverything ( final Path contentPath, final Path outputPath, File uiimagesTxt ) {
+    public Map < File, List < String > > extractEverything ( final Path outputPath, File uiimagesTxt ) {
         Map < File, List < String > > allFiles = new HashMap <>(  );
 
         List < String [ ] > gppkFiles = GPPKUtils.getAllLinesSplit( uiimagesTxt );
@@ -174,7 +194,7 @@ public class GPPK {
 
             if ( !validation.contains( internalPath ) ) {
                 try {
-                    Optional < File > opt = extractFile( contentPath, outputPath, internalPath );
+                    Optional < File > opt = extractFile( outputPath, internalPath );
 
                     opt.ifPresentOrElse( extracted -> {
                         ddsFiles.put( extracted , internalPath );
@@ -223,15 +243,14 @@ public class GPPK {
      * This can throw a NoSuchFileException if the uiimages.txt file was not extracted, as the entirety of the
      * extraction/conversion process can not continue without this file.
      *
-     * @param contentPath The path to the content.gppk path.
      * @param outputPath The path the uiimages.txt file will be extracted to.
      */
-    public Optional < File > extractUIImagesTXT ( Path contentPath, Path outputPath ) {
+    public Optional < File > extractUIImagesTXT ( Path outputPath ) {
         DDSProgressHook.setStep( "Extracting uiimages.txt" );
         DDSProgressHook.setValues( 0, 1 );
 
         try {
-            Optional < File > opt = extractFile ( contentPath, outputPath, UIIMAGES_TXT_LOC );
+            Optional < File > opt = extractFile ( outputPath, UIIMAGES_TXT_LOC );
             opt.orElseThrow( ( ) -> new NoSuchFileException( "No file was returned. uiimages.txt was not extracted." ) );
 
             return opt;
@@ -244,16 +263,18 @@ public class GPPK {
     }
 
     /**
-     * Convenience method to extract the uidivinationimages.txt file. Returns null if this encounters an error.
-     * @param contentPath The path the uiimages.txt file will be extracted to.
+     * Convenience method to extract the uidivinationimages.txt file.
+     * <br>
+     * This can throw a NoSuchFielException if the uidivinationimages.txt file was not extracted, as the entirety
+     * of the extraction/Conversion process can not continue without this file.
      * @param outputPath The path the uidivinationimages.txt file will be extracted to.
      */
-    public Optional < File > extractUIDivinationImagesTXT ( Path contentPath, Path outputPath ) {
+    public Optional < File > extractUIDivinationImagesTXT ( Path outputPath ) {
         DDSProgressHook.setStep( "Extracting uiimages.txt" );
         DDSProgressHook.setValues( 0, 1 );
 
         try {
-            Optional < File >  opt = extractFile ( contentPath, outputPath, UIDIVINATION_TXT_LOC );
+            Optional < File >  opt = extractFile ( outputPath, UIDIVINATION_TXT_LOC );
             opt.orElseThrow( ( ) -> new NoSuchFileException( "No file was returned. uidivinationimages.txt was not extracted." ) );
 
             return opt;
@@ -270,11 +291,10 @@ public class GPPK {
      * <br>
      * Extracted files are stored in a folder named after the extracted file within the output path.
      *
-     * @param contentPath The path to the content.gppk file.
      * @param outputPath The directory that will hold the extracted files.
      * @param wantedFile The internal .dds file wanted.
      */
-    private Optional < File > extractFile ( Path contentPath, Path outputPath, String wantedFile ) throws IOException {
+    private Optional < File > extractFile ( Path outputPath, String wantedFile ) throws IOException {
         LOGGER.log( Level.INFO, "STARTING FILE EXTRACTION FOR: " + wantedFile );
 
         /*

@@ -1,6 +1,5 @@
 package com.github.frizzy.PoeDDSExtractor.Testing;
 
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,14 +8,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Showcases how you could build a wanted textures list dependent on the wanted .dds files.
+ * <br>
+ * It should be noted that you have to provide the paths to both the .dds files and textures in
+ * each .dds file. Paths for both can be located and copied using VisualGPPK.
+ *
+ * @author Frizzy
+ */
 public class WantedTextureBuilder {
 
     private List < File > convertedFiles;
 
+    /**
+     * The list does not necessarily have to be the converted files. A list of all the .dds files
+     * can be used as well, as each file is just used to locate the path.txt file that was created when
+     * originally extracting the .dds files.
+     */
     public WantedTextureBuilder ( List < File > convertedFiles ) {
         this.convertedFiles = convertedFiles;
     }
 
+    /**
+     * Builds a map, with the keys being either a .dds or .png file reference, and the values being a List
+     * of paths pointing to the textures stored in each file.
+     */
     public Map < File, List < String > > buildWantedTextures ( ) throws IOException {
         Map < File, List < String > > map = new HashMap <>(  );
 

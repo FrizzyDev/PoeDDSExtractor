@@ -50,10 +50,16 @@ public class DDSConverter {
      */
     private File texConv;
 
+    /**
+     * Boolean flag determining if previously converted .dds files should be overwritten.
+     * <br>
+     * This can improve performance when restarting the conversion process.
+     */
     private boolean overwrite;
 
     /**
-     *
+     * Creates the DDSConverter instance with the path to the convert.bat file, texconv.exe file, and if
+     * previously converted .dds files should be overwritten or not.
      */
     public DDSConverter ( Path convertBatPath, Path texConvPath, boolean overwrite ) {
         this.convertBat = convertBatPath.toFile();
@@ -61,6 +67,11 @@ public class DDSConverter {
         this.overwrite = overwrite;
     }
 
+    /**
+     * Sets the overwrite flag.
+     * <br>
+     * May be important to know changing the overwrite flag will only have an effect before convert() is called.
+     */
     public void setOverwrite ( boolean overwrite ) {
         this.overwrite = overwrite;
     }

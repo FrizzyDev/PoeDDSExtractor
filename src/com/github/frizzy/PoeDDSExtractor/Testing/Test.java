@@ -21,7 +21,7 @@ public class Test {
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Output" );
         GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
-        Optional < File >  opt = gppk.extractUIImagesTXT( contentLocation, outputLocation );
+        Optional < File >  opt = gppk.extractUIImagesTXT( outputLocation );
 
         opt.ifPresent( uiimagestxt -> {
             List < File > ddsFiles = GPPKUtils.gatherPNGFrom( outputLocation );
@@ -59,7 +59,7 @@ public class Test {
         /*
          * Anytime you read the uiimages.txt file, make sure the encoding is set to StandardCharsets.UTF_16LE
          */
-        Optional < File >  opt = gppk.extractUIImagesTXT( contentLocation, outputLocation );
+        Optional < File >  opt = gppk.extractUIImagesTXT( outputLocation );
         Map < File , List < String > > allTextures = new HashMap <>(  );
 
         opt.ifPresent( uiimagestxt -> {
@@ -92,7 +92,7 @@ public class Test {
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Output" );
         GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
-        Optional < File >  opt = gppk.extractUIImagesTXT( contentLocation, outputLocation );
+        Optional < File >  opt = gppk.extractUIImagesTXT(  outputLocation );
 
         opt.ifPresent( uiimagestxt -> {
             List < File > ddsFiles = GPPKUtils.gatherDDSFrom( outputLocation );
@@ -146,10 +146,10 @@ public class Test {
         System.exit( 0 );
 
         GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
-        Optional < File > opt = gppk.extractUIImagesTXT( contentLocation , outputLocation );
+        Optional < File > opt = gppk.extractUIImagesTXT( outputLocation );
         opt.ifPresent( uiimagestxt -> {
             gppk.setOverwrite( false );
-            Map < File, List < String > > allTextures = gppk.extractEverything( contentLocation, outputLocation, uiimagestxt );
+            Map < File, List < String > > allTextures = gppk.extractEverything( outputLocation, uiimagestxt );
             DDSConverter converter = new DDSConverter( convertBatLocation, texConvLocation, false );
             converter.convert( GPPKUtils.getFilesFromMap( allTextures ) );
             DDSExtractor extractor = new DDSExtractor( uiimagestxt, false  );
@@ -180,10 +180,10 @@ public class Test {
             GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
             DDSConverter converter = new DDSConverter( convertBatLocation , texConvLocation, false);
 
-            List < File > extractedFiles = gppk.extract( contentLocation , outputLocation , wantedFiles );
+            List < File > extractedFiles = gppk.extract( outputLocation , wantedFiles );
             List < File > converted = converter.convert( extractedFiles );
 
-            Optional < File > uiimagesTxt = gppk.extractUIImagesTXT( contentLocation , outputLocation );
+            Optional < File > uiimagesTxt = gppk.extractUIImagesTXT( outputLocation );
 
             uiimagesTxt.ifPresentOrElse( txtFile -> {
                 DDSExtractor extractor = new DDSExtractor( txtFile , false );

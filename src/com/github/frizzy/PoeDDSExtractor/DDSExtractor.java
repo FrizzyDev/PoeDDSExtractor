@@ -32,6 +32,11 @@ public class DDSExtractor {
      */
     private final File txtFile;
 
+    /**
+     * Boolean flag determining if previously extracted textures should be overwritten.
+     * <br>
+     * Setting this to true can drastically improve performance when restarting the process.
+     */
     private boolean overwrite;
 
     /**
