@@ -1,7 +1,7 @@
 # PoeDDSExtractor
 ## About
 Working on a personal project of mine for Path of Exile, I wanted to be able to easily extract textures within the .dds files Path of Exile ships with. After a ton of research and experimentation,
-and with the help of tools like [LibGPPK3](https://github.com/aianlinb/LibGGPK3/tree/main) and Microsofts [texconv.exe](https://github.com/microsoft/DirectXTex/wiki/texconv), PoeDBBExtractor is able
+and with the help of tools like [LibGGPK3](https://github.com/aianlinb/LibGGPK3/tree/main) and Microsofts [texconv.exe](https://github.com/microsoft/DirectXTex/wiki/texconv), PoeDBBExtractor is able
 to work with both to extract specified .dds files for PoE's UI and convert them to .png to then extract each texture stored on the original .dds file. The entire process keeps the path and naming structure relatively intact.
 The user can specificy what .dds files they want and even specify what textures from that .dds file they want. If all UI/Interface .dds files and textures are required, the library can extract everything, but this is a very lengthy process
 ( around 2 hours with my testing ).
