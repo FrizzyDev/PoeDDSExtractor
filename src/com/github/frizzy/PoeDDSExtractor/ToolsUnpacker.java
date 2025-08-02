@@ -115,6 +115,30 @@ public class ToolsUnpacker {
     }
 
     /**
+     *
+     * @param zipPath The path to the bank_tools.zip on disk.
+     * @param outDirPath The directory the contents of bank_tools.zip will be extracted to.
+     */
+    public boolean extractBankToolsTo ( Path zipPath, Path outDirPath )  {
+        final String resourcePath = "/com/github/frizzy/PoeDDSExtractor/Resources/bank_tools.zip";
+        InputStream stream = BankExtractor.class.getResourceAsStream( resourcePath );
+
+        if ( stream != null ) {
+            try {
+                Files.copy( stream, zipPath);
+
+                ToolsUnpacker unpacker = new ToolsUnpacker();
+                unpacker.unzip( zipPath, outDirPath );
+            } catch ( IOException e ) {
+                LOGGER.log( Level.SEVERE, e.getMessage(), e );
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * I don't personally see why this is necessary, but I am going to leave it for now.
      * Eventually I want to remove the dependency on commons-io.
      * <a href="https://stackoverflow.com/questions/13441720/download-binary-file-from-github-using-java">Stack Overflow</a>
