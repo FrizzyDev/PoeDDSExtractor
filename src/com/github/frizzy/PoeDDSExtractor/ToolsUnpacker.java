@@ -47,6 +47,23 @@ public class ToolsUnpacker {
     }
 
     /**
+     * Exports the ExtractGPPK.exe file to the specified directory/file.
+     * <br>
+     * ExtractGPPK.exe is a command line tool I made to extract .bank files and
+     * is not included with LibGPPK3. This tool requires the other files included with
+     * LibGGPK3 and should be extracted to the same directory.
+     * @param out
+     */
+    public void exportExtractExe ( Path out ) {
+        final String resource = "/com/github/frizzy/PoeDDSExtractor/Resources/ExtractGPPK.exe";
+        try ( InputStream is = ToolsUnpacker.class.getResourceAsStream( resource ) ) {
+            Files.copy( is, out );
+        } catch ( IOException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+        }
+    }
+
+    /**
      * Downloads LibGPPK windows release and returns the path on disk.
      * <br>
      * <a href="https://stackoverflow.com/questions/13441720/download-binary-file-from-github-using-java">Stack Overflow</a>

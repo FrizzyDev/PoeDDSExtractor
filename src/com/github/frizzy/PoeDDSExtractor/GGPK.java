@@ -3,6 +3,7 @@ package com.github.frizzy.PoeDDSExtractor;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -24,9 +25,9 @@ import java.util.logging.Logger;
  * @version 0.1.1
  * @since 0.1.1
  */
-public class GPPK {
+public class GGPK {
 
-    private static Logger LOGGER = Logger.getLogger( GPPK.class.getPackageName() );
+    private static final Logger LOGGER = Logger.getLogger( GGPK.class.getPackageName() );
 
     /**
      * The path of the uiimages.txt file within the content.gppk file.
@@ -36,17 +37,27 @@ public class GPPK {
      */
     static final String UIIMAGES_TXT_LOC = "art/uiimages1.txt";
     static final String UIDIVINATION_TXT_LOC = "art/uidivinationimages.txt";
-    static final String GPPK_TOOL = "ExtractBundledGGPK3.exe";
+    static final String BUNDLED_GGPK_TOOL = "ExtractBundledGGPK3.exe";
+    static final String GGPK_TOOL = "ExtractGGPK.exe";
 
     /**
-     * The File object of LibGPPK exe tool.
+     * The File object of ExtractBundledGGPK3.exe.
+     * This is used to extract files stored in the internal bundles,
+     * such as a .dds file.
      */
-    private File gppkExe;
+    private final File extractBundledGGPKexe;
+
+    /**
+     * The File object of ExtractGGPK3.exe.
+     * This is used to extract bank files or files not stored
+     * within the internal bundles, such as a .bank file.
+     */
+    private File extractGGPKexe;
 
     /**
      * The path to the Content.gppk file.
      */
-    private Path contentPath;
+    private final Path contentPath;
 
     /**
      * Boolean flag determining if previously extracted .dds files should be overwritten.
@@ -68,17 +79,30 @@ public class GPPK {
 
     /**
      *
-     * @param gppkPath Path to the directory containing the LibGPPK tools.
+     * @param ggpkPath Path to the directory containing the LibGPPK tools.
      * @param contentPath Path to the content.gppk file.
      * @param duplicate Duplicates the content.gppk files to perform the extraction process faster by
      *                  being able to execute ExtractBundledGGPK3.exe multiple times at once.
      * @param overwrite Determines if previously extracted files should be overwritten.
      */
-    public GPPK ( final String gppkPath, Path contentPath, boolean duplicate, boolean overwrite ) throws FileNotFoundException {
-        Optional < File > opt = getGPPKExe( gppkPath );
-        gppkExe = opt.orElseThrow( ( ) -> new FileNotFoundException ( "GPPK exe was not found." ) );
+    public GGPK( final String ggpkPath, Path contentPath, boolean duplicate, boolean overwrite ) throws FileNotFoundException {
+        Optional < File > bgtOpt = getGPPKExe( ggpkPath, BUNDLED_GGPK_TOOL );
+        Optional < File > egOpt = getGPPKExe( ggpkPath, GGPK_TOOL  );
 
-        if ( !contentPath.toFile().exists() )
+        extractBundledGGPKexe = bgtOpt.orElseThrow(
+                ( ) -> new FileNotFoundException ( "ExtractBundledGGPK3.exe was not found." ) );
+
+        if ( egOpt.isPresent() ) {
+            extractGGPKexe = egOpt.get();
+        } else {
+            ToolsUnpacker unpacker = new ToolsUnpacker();
+            unpacker.exportExtractExe( Path.of( ggpkPath + File.separator + GGPK_TOOL ) );
+
+            extractGGPKexe = getGPPKExe( ggpkPath, GGPK_TOOL ).orElseThrow(
+                    ( ) -> new FileNotFoundException( "ExtractGGPK.exe export failed as the file cannot be found." ) );
+        }
+
+        if ( !Files.exists( contentPath ) )
             throw new FileNotFoundException( "Content.gppk was not found" );
 
         this.contentPath = contentPath;
@@ -91,7 +115,6 @@ public class GPPK {
 
     /**
      * Sets the amount of times the content.gppk file should be duplicated.
-     * @param newValue
      */
     public void setDuplicateValue ( int newValue ) {
         this.duplicateValue = newValue;
@@ -147,7 +170,7 @@ public class GPPK {
             try {
                 Optional < File > ef = extractFile( outputPath, wf );
                 ef.ifPresentOrElse( a -> extracted.add( ef.get( ) ) , ( ) -> {
-                    LOGGER.log( Level.WARNING, "No file was returned. .dds file for: " + wf + " was not extracted." );
+                    LOGGER.log( Level.WARNING, "No file was returned. File for: " + wf + " was not extracted." );
                 } );
             } catch ( IOException e ) {
                 LOGGER.log( Level.SEVERE, e.getMessage() );
@@ -265,7 +288,7 @@ public class GPPK {
     /**
      * Convenience method to extract the uidivinationimages.txt file.
      * <br>
-     * This can throw a NoSuchFielException if the uidivinationimages.txt file was not extracted, as the entirety
+     * This can throw a NoSuchFileException if the uidivinationimages.txt file was not extracted, as the entirety
      * of the extraction/Conversion process can not continue without this file.
      * @param outputPath The path the uidivinationimages.txt file will be extracted to.
      */
@@ -304,25 +327,42 @@ public class GPPK {
          * I wanted something relatively identifiable, but I suppose it is not strictly necessary.
          */
         String temp = "";
+        File outputDir = null;
+        File toolToUse = null;
 
-        if ( wantedFile.contains( ".dds" ) ) {
-            temp = wantedFile.replaceAll( "/", "_" ).replace( ".dds", "" );
-        } else if ( wantedFile.contains( ".txt" ) ) {
-            temp = wantedFile.replaceAll( "/", "_" ).replace( ".txt", "" );
+        String extension = FilenameUtils.getExtension( wantedFile );
+        if ( extension.equalsIgnoreCase( "dds" ) || extension.equalsIgnoreCase( "txt" ) ) {
+            String sub = wantedFile.replaceAll( "/", "_" );
+
+            temp = extension.equalsIgnoreCase( "dds" ) ?
+                    sub.replace( ".dds", "" ) : sub.replace( ".txt", "" );
+
+            outputDir = new File( outputPath.toString() + File.separator + temp );
+            toolToUse = extractBundledGGPKexe;
+        } else if ( extension.equalsIgnoreCase( "bank" ) ) {
+            outputDir = outputPath.toFile();
+            toolToUse = extractGGPKexe;
         }
 
-        File outputDir = new File( outputPath.toString() + File.separator + temp );
-        Path path = Path.of( outputDir + File.separator + "path.txt" );
+        if ( outputDir == null ) {
+            LOGGER.log( Level.WARNING, "Output Directory is null." );
+            return Optional.empty();
+        }
 
-        if ( overwrite && outputDir.exists() || !outputDir.exists() ) {
-            boolean created = outputDir.mkdir();
+        final String subbed = wantedFile.substring( wantedFile.lastIndexOf( "/" ) + 1 );
+        final Path path = Path.of( outputDir + File.separator + subbed + "_path.txt" );
 
-            if ( !created && !overwrite ) {
-                LOGGER.log( Level.WARNING, "Output directory for wanted file could not be created. Operation will not continue." );
-                return Optional.empty();
+        if ( ( overwrite && outputDir.exists() ) || !outputDir.exists() || extension.equalsIgnoreCase( "bank" ) ) {
+            if ( !wantedFile.contains( ".bank" )) {
+                boolean created = outputDir.mkdir();
+
+                if ( !created && !overwrite ) {
+                    LOGGER.log( Level.WARNING, "Output directory for wanted file could not be created. Operation will not continue." );
+                    return Optional.empty();
+                }
             }
 
-            CommandLine commandLine = new CommandLine( gppkExe );
+            CommandLine commandLine = new CommandLine( toolToUse );
             commandLine.addArgument( contentPath.toString() );
             commandLine.addArgument( wantedFile );
             commandLine.addArgument( outputDir.toString() );
@@ -337,15 +377,13 @@ public class GPPK {
             executor.setStreamHandler( psh );
 
             int exitCode = executor.execute( commandLine );
+            LOGGER.log( Level.INFO, stdOut.toString() );
 
             if ( exitCode == 0 ) {
                 File[] files = outputDir.listFiles();
 
                 if ( files != null ) {
                     for ( File f : files ) {
-                        final String subbed = wantedFile.substring( wantedFile.lastIndexOf( "/" ) + 1 );
-                        LOGGER.log( Level.INFO, "Subbed: " + subbed + ", Wanted File: " + wantedFile  );
-
                         if ( f.getName().equalsIgnoreCase( subbed ) ) {
                             LOGGER.log( Level.INFO, "FILE SUCCESSFULLY EXTRACTED: " + f.getAbsolutePath() );
 
@@ -353,6 +391,7 @@ public class GPPK {
                              * Write the wanted file internal content.gppk path to be used for future reference.
                              */
                             LOGGER.log( Level.INFO, "Writing path.txt at: " + outputDir + File.separator + "path.txt" );
+
                             Files.writeString( path, wantedFile );
 
                             return Optional.of( f );
@@ -363,38 +402,41 @@ public class GPPK {
                 LOGGER.log( Level.WARNING, "Exit code returned was non-zero. The file was likely not extracted and the"
                         + " path.txt file was not created.");
             }
-        } else if ( outputDir.exists() && !overwrite ) {
+        } else if ( ( outputDir.exists() && !overwrite ) ) {
             File [ ] files = outputDir.listFiles();
 
-            File toAdd = null;
-            File txt = null;
-            for ( File f : files ) {
-                if ( f.getName().contains( ".dds" ) ) {
-                    toAdd = f;
+            if ( files != null ) {
+                File toAdd = null;
+                File txt = null;
+                for ( File f : files ) {
+                    final String ext = FilenameUtils.getExtension( f.getName() );
+                    if ( ext.equalsIgnoreCase( "dds" )  || ext.equalsIgnoreCase( "bank" ) ) {
+                        toAdd = f;
+                    }
+
+                    if ( ext.equalsIgnoreCase( "txt" ) ) {
+                        txt = f;
+                    }
                 }
 
-                if ( f.getName().contains( ".txt" ) ) {
-                    txt = f;
+                if ( txt == null ) {
+                    /*
+                     * Previous iterations of this method did not produce a path.txt file in some cases.
+                     * I believe it is corrected, but as a just in case, I am keeping this here for now.
+                     */
+                    Files.writeString( path , wantedFile );
                 }
-            }
 
-            if ( txt == null ) {
                 /*
-                 * Previous iterations of this method did not produce a path.txt file in some cases.
-                 * I believe it is corrected, but as a just in case, I am keeping this here for now.
+                 * Similar to the txt file, previous iterations of this method did not return the extracted .dds
+                 * file reference within the Optional, causing the resulting list to be missing a lot of files.
+                 * This should be corrected, but I am leaving it here as a just in case.
+                 * This also will make sure any previously extracted .dds files are returned in the event boolean
+                 * overwrite is false.
                  */
-                Files.writeString( path , wantedFile );
-            }
-
-            /*
-             * Similar to the txt file, previous iterations of this method did not return the extracted .dds
-             * file reference within the Optional, causing the resulting list to be missing a lot of files.
-             * This should be corrected, but I am leaving it here as a just in case.
-             * This also will make sure any previously extracted .dds files are returned in the event boolean
-             * overwrite is false.
-             */
-            if ( toAdd != null ) {
-                return Optional.of( toAdd );
+                if ( toAdd != null ) {
+                    return Optional.of( toAdd );
+                }
             }
         }
 
@@ -404,7 +446,7 @@ public class GPPK {
     /**
      * Attempts to retrieve the ExtractBundledGGPK3.exe and returns an Optional instance.
      */
-    private Optional <File> getGPPKExe ( String gppkPath ) {
+    private Optional <File> getGPPKExe ( String gppkPath, String TOOL ) {
         File file = new File( gppkPath );
 
         if ( file.isDirectory() ) {
@@ -412,7 +454,7 @@ public class GPPK {
 
             if ( files != null ) {
                 for ( File f : files ) {
-                    if ( f.getName().contains( GPPK_TOOL ) ) {
+                    if ( f.getName().contains( TOOL ) ) {
                         return Optional.of( f );
                     }
                 }

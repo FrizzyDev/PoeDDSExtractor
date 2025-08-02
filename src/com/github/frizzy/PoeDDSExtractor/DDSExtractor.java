@@ -47,6 +47,14 @@ public class DDSExtractor {
         this.overwrite = overwrite;
     }
 
+    public Map < File , List < File > > extractSubTextures ( Map < File, List < String > > wantedTextures ) {
+        return extractSubTextures( wantedTextures, null );
+    }
+
+    public Map < File, List < File > > extractAllSubTextures ( List < File > extractedFiles ) {
+        return extractAllSubTextures( extractedFiles, null );
+    }
+
     /**
      * Extracts sub textures from the provided list of png files. The png files provided
      * should be files that were converted from .dds by DDSExtractor and the sub textures should have a path
@@ -57,9 +65,10 @@ public class DDSExtractor {
      *
      * @param wantedTextures A map containing files textures will be extracted from and the individual textures wanted from each file. <Br>
      *                       The key should be the png file the extraction process will work with.
+     * @param outputPath A path that can be optionally specified to have all extracted textures saved to.
      */
     @SuppressWarnings( "all" ) //temp
-    public Map < File, List < File > > extractSubTextures( Map < File, List < String > > wantedTextures ) {
+    public Map < File, List < File > > extractSubTextures( Map < File, List < String > > wantedTextures, Path outputPath ) {
         Map < File, List < File > > allTextures = new HashMap <>( );
 
         Iterator < File > it = wantedTextures.keySet( ).iterator( );
@@ -89,7 +98,7 @@ public class DDSExtractor {
 
                                 int[] coords = GPPKUtils.getCoordinatesFrom( line );
 
-                                Optional < File > opt = extract( coords[ 0 ] , coords[ 2 ] , coords[ 1 ] , coords[ 3 ] , pngFile , textureName );
+                                Optional < File > opt = extract( coords[ 0 ] , coords[ 2 ] , coords[ 1 ] , coords[ 3 ] , pngFile , textureName, outputPath );
                                 opt.ifPresentOrElse( extracted -> {
                                             if ( extracted.exists( ) ) {
                                                 if ( !allTextures.containsKey( pngFile ) ) {
@@ -124,7 +133,7 @@ public class DDSExtractor {
      *
      * @param extractedFiles The list of .png files that will have textures extracted from.
      */
-    public Map < File, List < File > > extractAllSubTextures( List < File > extractedFiles ) {
+    public Map < File, List < File > > extractAllSubTextures( List < File > extractedFiles, Path output ) {
         Map < File, List < File > > allTextures = new HashMap <>( );
 
         if ( extractedFiles != null && !extractedFiles.isEmpty( ) ) {
@@ -144,7 +153,7 @@ public class DDSExtractor {
 
                         int[] coords = GPPKUtils.getCoordinatesFrom( line );
 
-                        Optional < File > opt = extract( coords[ 0 ] , coords[ 2 ] , coords[ 1 ] , coords[ 3 ] , pngFile , textureName );
+                        Optional < File > opt = extract( coords[ 0 ] , coords[ 2 ] , coords[ 1 ] , coords[ 3 ] , pngFile , textureName, output );
                         opt.ifPresentOrElse( extracted -> {
                                     if ( extracted.exists( ) ) {
                                         if ( !allTextures.containsKey( pngFile ) ) {
@@ -179,9 +188,10 @@ public class DDSExtractor {
      * @param y2          The second y coordinate of the sub texture. y1 is subtracted to create the height of the image.
      * @param pngFile     The png file containing the sub textures.
      * @param textureName The name of the sub texture being extracted.
+     * @param output A path that all extracted textures will be saved to. Can be null.
      * @return Returns an Optional of File to help protect the process from null values.
      */
-    private Optional < File > extract( int x1 , int x2 , int y1 , int y2 , File pngFile , String textureName ) {
+    private Optional < File > extract( int x1 , int x2 , int y1 , int y2 , File pngFile , String textureName, Path output ) {
         if ( pngFile == null )
             return Optional.empty( );
 
@@ -208,7 +218,13 @@ public class DDSExtractor {
                 BufferedImage extracted = parent.getSubimage( x1 , y1 , x2 , y2 );
 
                 String subbedName = textureName.substring( textureName.lastIndexOf( "/" ) );
-                File extractedFile = new File( pngFile.getParentFile( ).getAbsolutePath( ) + File.separator + subbedName + ".png" );
+                File extractedFile;
+
+                if ( output != null ) {
+                    extractedFile = new File( output + File.separator + subbedName + ".png" );
+                } else {
+                    extractedFile = new File( pngFile.getParentFile( ).getAbsolutePath( ) + File.separator + subbedName + ".png" );
+                }
 
                 if ( extractedFile.exists( ) && overwrite || !extractedFile.exists( ) ) {
                     completeWrite( extracted , extractedFile , textureName );

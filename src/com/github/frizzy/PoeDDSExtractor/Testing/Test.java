@@ -1,6 +1,8 @@
 package com.github.frizzy.PoeDDSExtractor.Testing;
 
 import com.github.frizzy.PoeDDSExtractor.*;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,14 +15,67 @@ import java.util.concurrent.TimeUnit;
 public class Test {
 
     public static void main( String[] args ) throws IOException {
-        getSpecificFiles();
+        String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
+        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
+        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank Testing" );
+        GGPK ggpk = new GGPK( gppkLocation, contentLocation, false, true );
+
+        List < File > banks = ggpk.extract( outputLocation, buildWantedBanks() );
+
+        final String bankPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\UI_General.bank";
+        BankExtractor extractor = new BankExtractor("C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\"  );
+
+        Map < File , List < File > > extracted = extractor.extractAllWavFiles( banks );
+
+    }
+
+    private static List < String > buildWantedBanks ( ) {
+        List < String > list = new ArrayList <>(  );
+
+        list.add( "FMOD/Desktop/UI_General.bank" );
+        list.add( "FMOD/Desktop/UI_Hideout.bank" );
+        list.add( "FMOD/Desktop/UI_Party.bank" );
+        list.add( "FMOD/Desktop/UI_Trade.bank" );
+
+        return list;
+    }
+
+    public static void testAudio ( ) throws IOException {
+        final String bmsExePath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\quickbms.exe";
+        final String bmsScriptPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\Script.bms";
+        final String fmodExtractPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\fsb_aud_extr.exe";
+        final String fsbPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\00000000.fsb";
+        //final String command = "for %i in (\"C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\"*.fsb) do fsb_aud_extr.exe \"%i\"";
+
+        CommandLine cmdLine = new CommandLine( bmsExePath );
+
+        cmdLine.addArgument( bmsScriptPath );
+        cmdLine.addArgument( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\UI_General.bank" );
+        cmdLine.addArgument( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing" );
+
+        DefaultExecutor executor = DefaultExecutor.builder().get();
+        int code = executor.execute( cmdLine );
+
+        CommandLine cmdLine2 = new CommandLine( fmodExtractPath );
+
+        cmdLine2.addArgument( fsbPath );
+        cmdLine2.addArgument( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\Output" );
+
+
+//        CommandLine cmdLine2 = new CommandLine( "cmd.exe" );
+//        cmdLine2.addArgument( "/C \"\"C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\batch.bat\"\"", false );
+//
+//        DefaultExecutor executor1 = DefaultExecutor.builder().get();
+//
+//        int code2 = executor1.execute( cmdLine2 );
+
     }
 
     public static void gatherPNGTest ( ) throws FileNotFoundException {
         String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\win-x64";
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Output" );
-        GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
+        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
         Optional < File >  opt = gppk.extractUIImagesTXT( outputLocation );
 
         opt.ifPresent( uiimagestxt -> {
@@ -55,7 +110,7 @@ public class Test {
         Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
         Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
 
-        GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
+        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
         /*
          * Anytime you read the uiimages.txt file, make sure the encoding is set to StandardCharsets.UTF_16LE
          */
@@ -91,7 +146,7 @@ public class Test {
         String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\win-x64";
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Output" );
-        GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
+        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
         Optional < File >  opt = gppk.extractUIImagesTXT(  outputLocation );
 
         opt.ifPresent( uiimagestxt -> {
@@ -145,7 +200,7 @@ public class Test {
         up.exportBat( convertBatLocation );
         System.exit( 0 );
 
-        GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
+        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
         Optional < File > opt = gppk.extractUIImagesTXT( outputLocation );
         opt.ifPresent( uiimagestxt -> {
             gppk.setOverwrite( false );
@@ -177,7 +232,7 @@ public class Test {
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test " );
 
         try {
-            GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true );
+            GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
             DDSConverter converter = new DDSConverter( convertBatLocation , texConvLocation, false);
 
             List < File > extractedFiles = gppk.extract( outputLocation , wantedFiles );
