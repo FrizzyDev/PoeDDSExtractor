@@ -13,7 +13,10 @@ The third caveat is this tool only works with the standlone PoE client. The curr
 ## Usage
 Now time for the fun!
 PoeDDSExtractor usage for extracting everything can look like this:
+
 ```java
+//GGPK.java still exists, but use GGPK2.java instead, the process is more streamlined and easier to follow.
+
 //Download LibGGPK3 and texconv.exe to desired folder here using ToolsUnpacker
 //Extract LibGGPK3 to desired folder here using ToolsUnpacker
 //When instantiating GGPK, it'll attempt to export the ExtractGGPK.exe needed for bank files.
@@ -28,26 +31,20 @@ Path texConvLocation = ...
 ToolsUnpacker up = new ToolsUnpacker ( );
 up.exportBat ( convertBatLocation );
 
-GGPK ggpk = new GGPK( gppkLocation, contentLocation, false, true ); //false boolean is for duplication, not working yet. true is for overwrite.
-Optional < File >  opt = ggpk.extractUIImagesTXT( contentLocation, outputLocation ); //The uiimages.txt must be extracted first in the event of extracting EVERYTHING
+GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
+List < DDSFile > ddsFiles = ggpk.extract( outputLocation, buildWantedFiles() );
 
-opt.ifPresent( uiimagestxt -> {
-  ggpk.setOverwrite( false );
-  Map < File, List < String > > allTextures = gppk.extractEverything( contentLocation, outputLocation, uiimagestxt ); //Extracts all .dds files
+DDSConverter2 converter = new DDSConverter2( convertBatLocation, texConvLocation, true );
+ddsFiles = converter.convert( ddsFiles );
 
-  DDSConverter converter = new DDSConverter( convertBatLocation, texConvLocation, false ); // false boolean is for overwrite.
-  converter.convert( GPPKUtils.getFilesFromMap( allTextures ) ); //Converts all .dds files to .png
-
-  DDSExtractor extractor = new DDSExtractor( uiimagestxt, false  ); // false boolean is for overwrite
-  extractor.extractSubTextures( allTextures ); //Extracts all textures from every .dds file.
-
-} );
-
+DDSExtractor2 extractor = new DDSExtractor2( ggpk.getuiImagesTxtFile(), true  );
+ddsFiles = extractor.extractSubTextures( ddsFiles );
+//Do what you want after this. Each DDSFile in the list will now contain the .dds file, converted .png file, list of textures in the .dds file, and a list of extracted textures.
 ```
 ## Some more usage information
-Theres methods in GGPK to extract specific files, as well as in DDSExtractor to extract specific textures. The catch is you have to specify the paths your self. You can use VisualLibGGPK3 to browse the Content.ggpk file to get these paths yourself.
-GGPK, DDSConverter, and DDSExtractor all contain an overwrite boolean flag, in which if it is set to false, any previously extracted .dds files, converted .dds files, or extracted textures will be skipped. This is useful if you run into errors ( hopefully not, but you never know)
-so you don't have to redo what has already been done. GGPK will eventually have a process to run the extraction tool multiple times at the same time and that is what the duplicate flag is for, but it is not implemented. To expand on that a bit, LibGGPK3 is not thread safe and also locks
+Theres methods in GGPK2 to extract specific files, as well as in DDSExtractor2 to extract specific textures. The catch is you have to specify the paths your self. You can use VisualLibGGPK3 to browse the Content.ggpk file to get these paths yourself.
+GGPK2, DDSConverter2, and DDSExtractor2 all contain an overwrite boolean flag, in which if it is set to false, any previously extracted .dds files, converted .dds files, or extracted textures will be skipped. This is useful if you run into errors ( hopefully not, but you never know)
+so you don't have to redo what has already been done. GGPK2 will eventually have a process to run the extraction tool multiple times at the same time and that is what the duplicate flag is for, but it is not implemented. To expand on that a bit, LibGGPK3 is not thread safe and also locks
 the Content.ggpk file when in use, so attempting to interact with multiple instances fails. 
 
 ## Going forward
