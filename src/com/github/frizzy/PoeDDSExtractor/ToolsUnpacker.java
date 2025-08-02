@@ -22,7 +22,7 @@ import java.util.zip.ZipInputStream;
  * file for the LibGPPK3 release.
  *
  * @author Frizzy
- * @version 0.0.1
+ * @version 0.0.2
  */
 public class ToolsUnpacker {
 

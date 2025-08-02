@@ -14,14 +14,14 @@ import java.util.logging.Logger;
  * A utility class to help with a couple of things in PoeDDSExtractor.
  *
  * @author Frizzy
- * @version 0.0.1
+ * @version 0.0.2
  * @since 0.0.1
  */
-public class GPPKUtils {
+public class GGPKUtils {
 
-    private static final Logger LOGGER = Logger.getLogger( GPPKUtils.class.getName() ) ;
+    private static final Logger LOGGER = Logger.getLogger( GGPKUtils.class.getName() ) ;
 
-    private GPPKUtils ( ) {
+    private GGPKUtils( ) {
 
     }
 
@@ -60,7 +60,7 @@ public class GPPKUtils {
     /**
      * Gets all the textures stored in the .dds file of the provided gppk path.
      */
-    public static List < String > getAllTexturesFor ( File uiimagesTxt, String gppkDDSFilePath ) {
+    public static List < String > getAllTexturesFor1( File uiimagesTxt, String gppkDDSFilePath ) {
         List < String > textures = new ArrayList <>(  );
 
         try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( new FileInputStream( uiimagesTxt ) , StandardCharsets.UTF_16LE ) ) ) {
@@ -80,6 +80,35 @@ public class GPPKUtils {
 
         return textures;
     }
+
+    /**
+     * Gets all the textures stored in the .dds file of the provided gppk path.
+     */
+    public static List < Texture > getAllTexturesFor2( File uiimagesTxt, String gppkDDSFilePath ) {
+        List < Texture > textures = new ArrayList <>(  );
+        List < String > validation = new ArrayList <>(  );
+
+        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( new FileInputStream( uiimagesTxt ) , StandardCharsets.UTF_16LE ) ) ) {
+            String line;
+            while ( ( line = bReader.readLine( ) ) != null ) {
+                if ( line.toLowerCase( ).contains( gppkDDSFilePath.toLowerCase(  ) ) ) {
+                    String textureName = line.substring( 1 , line.indexOf( "\" " )  );
+
+                    if ( !validation.contains( textureName ) ) {
+                        Texture texture = new Texture( textureName, gppkDDSFilePath, getCoordinatesFrom( line ) );
+                        textures.add( texture );
+
+                        validation.add( textureName );
+                    }
+                }
+            }
+        } catch ( IOException | NullPointerException e ) {
+            LOGGER.log( Level.SEVERE , e.getMessage( ) , e );
+        }
+
+        return textures;
+    }
+
 
     /**
      * Gets a textures x,y coordinates from the provided uiimages.txt line.

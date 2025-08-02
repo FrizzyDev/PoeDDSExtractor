@@ -15,18 +15,43 @@ import java.util.concurrent.TimeUnit;
 public class Test {
 
     public static void main( String[] args ) throws IOException {
-        String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
+        String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
-        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank Testing" );
-        GGPK ggpk = new GGPK( gppkLocation, contentLocation, false, true );
+        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
+        Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
+        Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
 
-        List < File > banks = ggpk.extract( outputLocation, buildWantedBanks() );
+        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
 
-        final String bankPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\UI_General.bank";
-        BankExtractor extractor = new BankExtractor("C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\"  );
+        List < DDSFile > ddsFiles = ggpk.extract( outputLocation, buildWantedFiles() );
 
-        Map < File , List < File > > extracted = extractor.extractAllWavFiles( banks );
+        DDSConverter2 converter = new DDSConverter2( convertBatLocation, texConvLocation, true );
 
+        ddsFiles = converter.convert( ddsFiles );
+
+        DDSExtractor2 extractor = new DDSExtractor2( ggpk.getuiImagesTxtFile(), true  );
+        ddsFiles = extractor.extractSubTextures( ddsFiles );
+
+        for ( DDSFile dFile : ddsFiles ) {
+
+            System.out.println( "DDSFile path: " + dFile.getDdsPath() );
+            System.out.println( "DDSFile disk path: " + dFile.getFile().getAbsolutePath() );
+            System.out.println( "PNG file disk path: " + dFile.getPngFile().getAbsolutePath() );
+            System.out.println( "DDS File textures: " );
+
+            for ( Texture t : dFile.getUnextractedTextures() ) {
+                System.out.println( "Texture name: " + t.name() );
+                System.out.println( "Texture path: " + t.path() );
+                System.out.println( "Texture Coordinates: " + Arrays.toString( t.coordinates() ) );
+                System.out.println( "----------------------------------------------------------" );
+            }
+
+            System.out.println( "DDS Extracted textures: " );
+
+            for ( File f : dFile.getExtractedTextures() ) {
+                System.out.println( "Texture path: " + f.getAbsolutePath() );
+            }
+        }
     }
 
     private static List < String > buildWantedBanks ( ) {
@@ -79,7 +104,7 @@ public class Test {
         Optional < File >  opt = gppk.extractUIImagesTXT( outputLocation );
 
         opt.ifPresent( uiimagestxt -> {
-            List < File > ddsFiles = GPPKUtils.gatherPNGFrom( outputLocation );
+            List < File > ddsFiles = GGPKUtils.gatherPNGFrom( outputLocation );
             Map < File , List < String > > allTextures = new HashMap <>(  );
 
             for ( File pngFile : ddsFiles ) {
@@ -88,7 +113,7 @@ public class Test {
                 if ( txt.exists() ) {
                     try {
                         String path = Files.readString( txt.toPath() );
-                        List < String > textures = GPPKUtils.getAllTexturesFor( uiimagestxt, path );
+                        List < String > textures = GGPKUtils.getAllTexturesFor1( uiimagestxt, path );
 
                         allTextures.put( pngFile, textures );
 
@@ -118,7 +143,7 @@ public class Test {
         Map < File , List < String > > allTextures = new HashMap <>(  );
 
         opt.ifPresent( uiimagestxt -> {
-            List < File > ddsFiles = GPPKUtils.gatherDDSFrom( outputLocation );
+            List < File > ddsFiles = GGPKUtils.gatherDDSFrom( outputLocation );
             DDSConverter converter = new DDSConverter( convertBatLocation, texConvLocation, false );
             List < File> convertedDDSFiles = converter.convert( ddsFiles );
 
@@ -128,7 +153,7 @@ public class Test {
                 if ( txt.exists() ) {
                     try {
                         String path = Files.readString( txt.toPath() );
-                        List < String > textures = GPPKUtils.getAllTexturesFor( uiimagestxt, path );
+                        List < String > textures = GGPKUtils.getAllTexturesFor1( uiimagestxt, path );
 
                         allTextures.put( pngFile, textures );
                     } catch ( IOException e ) {
@@ -150,7 +175,7 @@ public class Test {
         Optional < File >  opt = gppk.extractUIImagesTXT(  outputLocation );
 
         opt.ifPresent( uiimagestxt -> {
-            List < File > ddsFiles = GPPKUtils.gatherDDSFrom( outputLocation );
+            List < File > ddsFiles = GGPKUtils.gatherDDSFrom( outputLocation );
             Map < File , List < String > > allTextures = new HashMap <>(  );
 
             int ddsCounter = 0;
@@ -162,7 +187,7 @@ public class Test {
                 if ( txt.exists() ) {
                     try {
                         String path = Files.readString( txt.toPath() );
-                        List < String > textures = GPPKUtils.getAllTexturesFor( uiimagestxt, path );
+                        List < String > textures = GGPKUtils.getAllTexturesFor1( uiimagestxt, path );
 
                         allTextures.put( ddsFile, textures );
 
@@ -206,7 +231,7 @@ public class Test {
             gppk.setOverwrite( false );
             Map < File, List < String > > allTextures = gppk.extractEverything( outputLocation, uiimagestxt );
             DDSConverter converter = new DDSConverter( convertBatLocation, texConvLocation, false );
-            converter.convert( GPPKUtils.getFilesFromMap( allTextures ) );
+            converter.convert( GGPKUtils.getFilesFromMap( allTextures ) );
             DDSExtractor extractor = new DDSExtractor( uiimagestxt, false  );
             extractor.extractSubTextures( allTextures );
         } );
