@@ -47,7 +47,7 @@ opt.ifPresent( uiimagestxt -> {
 ## Some more usage information
 Theres methods in GGPK to extract specific files, as well as in DDSExtractor to extract specific textures. The catch is you have to specify the paths your self. You can use VisualLibGGPK3 to browse the Content.ggpk file to get these paths yourself.
 GGPK, DDSConverter, and DDSExtractor all contain an overwrite boolean flag, in which if it is set to false, any previously extracted .dds files, converted .dds files, or extracted textures will be skipped. This is useful if you run into errors ( hopefully not, but you never know)
-so you don't have to redo what has already been done. GPPK will eventually have a process to run the extraction tool multiple times at the same time and that is what the duplicate flag is for, but it is not implemented. To expand on that a bit, LibGGPK3 is not thread safe and also locks
+so you don't have to redo what has already been done. GGPK will eventually have a process to run the extraction tool multiple times at the same time and that is what the duplicate flag is for, but it is not implemented. To expand on that a bit, LibGGPK3 is not thread safe and also locks
 the Content.ggpk file when in use, so attempting to interact with multiple instances fails. 
 
 ## Going forward
