@@ -8,14 +8,15 @@ The user can specificy what .dds files they want and even specify what textures 
 Paths for .dds files and texture names can be found within the Content.gppk uiimages.txt file. This txt file contains the texture path and names, what .dds files those textures are stored on, and the x1, x2, y1, y2 coordinates of each texture.
 
 Sounds great! There is a few caveats to this process. While extracting UI/Interface .dds files and textures is pretty straight forward, divination card textures and UI textures is all that can be deterministically extracted ( as of right now ).
-The second caveat is the command line tool from LibGPPK3 is inherently slow, and does not allow for batch commands. This means you can only extract one file at a time. In my testing, extracting all UI .dds files takes around an hour and a half. Long time!
-The third caveat is this tool only works with the standlone PoE client. The current LibGPPK3 command line tool does not support _index.bin files that is distributed with the steam version, so I am unable to make calls to that tool for steam distros. 
+The second caveat is the command line tool from LibGGPK3 is inherently slow, and does not allow for batch commands. This means you can only extract one file at a time. In my testing, extracting all UI .dds files takes around an hour and a half. Long time!
+The third caveat is this tool only works with the standlone PoE client. The current LibGGPK3 command line tool does not support _index.bin files that is distributed with the steam version, so I am unable to make calls to that tool for steam distros. 
 ## Usage
 Now time for the fun!
 PoeDDSExtractor usage for extracting everything can look like this:
 ```java
-//Download LibGPPK3 and texconv.exe to desired folder here using ToolsUnpacker
-//Extract LibGPPK3 to desired folder here using ToolsUnpacker
+//Download LibGGPK3 and texconv.exe to desired folder here using ToolsUnpacker
+//Extract LibGGPK3 to desired folder here using ToolsUnpacker
+//When instantiating GGPK, it'll attempt to export the ExtractGGPK.exe needed for bank files.
 
 String gppkLocation = ...
 Path contentLocation = ...
@@ -27,11 +28,11 @@ Path texConvLocation = ...
 ToolsUnpacker up = new ToolsUnpacker ( );
 up.exportBat ( convertBatLocation );
 
-GPPK gppk = new GPPK( gppkLocation, contentLocation, false, true ); //false boolean is for duplication, not working yet. true is for overwrite.
-Optional < File >  opt = gppk.extractUIImagesTXT( contentLocation, outputLocation ); //The uiimages.txt must be extracted first in the event of extracting EVERYTHING
+GGPK ggpk = new GGPK( gppkLocation, contentLocation, false, true ); //false boolean is for duplication, not working yet. true is for overwrite.
+Optional < File >  opt = ggpk.extractUIImagesTXT( contentLocation, outputLocation ); //The uiimages.txt must be extracted first in the event of extracting EVERYTHING
 
 opt.ifPresent( uiimagestxt -> {
-  gppk.setOverwrite( false );
+  ggpk.setOverwrite( false );
   Map < File, List < String > > allTextures = gppk.extractEverything( contentLocation, outputLocation, uiimagestxt ); //Extracts all .dds files
 
   DDSConverter converter = new DDSConverter( convertBatLocation, texConvLocation, false ); // false boolean is for overwrite.
@@ -44,10 +45,10 @@ opt.ifPresent( uiimagestxt -> {
 
 ```
 ## Some more usage information
-Theres methods in GPPK to extract specific files, as well as in DDSExtractor to extract specific textures. The catch is you have to specify the paths your self. You can use VisualLibGPPK3 to browse the Content.gppk file to get these paths yourself.
-GPPK, DDSConverter, and DDSExtractor all contain an overwrite boolean flag, in which if it is set to false, any previously extracted .dds files, converted .dds files, or extracted textures will be skipped. This is useful if you run into errors ( hopefully not, but you never know)
-so you don't have to redo what has already been done. GPPK will eventually have a process to run the extraction tool multiple times at the same time and that is what the duplicate flag is for, but it is not implemented. To expand on that a bit, LibGPPK3 is not thread safe and also locks
-the Content.gppk file when in use, so attempting to interact with multiple instances fails. 
+Theres methods in GGPK to extract specific files, as well as in DDSExtractor to extract specific textures. The catch is you have to specify the paths your self. You can use VisualLibGGPK3 to browse the Content.ggpk file to get these paths yourself.
+GGPK, DDSConverter, and DDSExtractor all contain an overwrite boolean flag, in which if it is set to false, any previously extracted .dds files, converted .dds files, or extracted textures will be skipped. This is useful if you run into errors ( hopefully not, but you never know)
+so you don't have to redo what has already been done. GPPK will eventually have a process to run the extraction tool multiple times at the same time and that is what the duplicate flag is for, but it is not implemented. To expand on that a bit, LibGGPK3 is not thread safe and also locks
+the Content.ggpk file when in use, so attempting to interact with multiple instances fails. 
 
 ## Going forward
 I'm pretty positive there is still some texture extraction issues to iron out, but there is a lot of files so I am testing for a lot of potential cases. Additionally, while I can't currently speed up the .dds file extraction process, I am looking into speeding up everything else surrounding it.
