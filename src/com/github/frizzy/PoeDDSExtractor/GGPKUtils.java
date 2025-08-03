@@ -109,6 +109,41 @@ public class GGPKUtils {
         return textures;
     }
 
+    /**
+     * Gets a list of textures that only match up with the specified wantedTextures list.
+     */
+    public static List < Texture > getSpecificTexturesFor ( File txtFile, String ggpkDDSFilePath, List < String > wantedTextures ) {
+        List < Texture > textures = new ArrayList <>(  );
+        List < String > validation = new ArrayList <>(  );
+
+        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( new FileInputStream( txtFile ) , StandardCharsets.UTF_16LE ) ) ) {
+            String line;
+            while ( ( line = bReader.readLine( ) ) != null ) {
+                if ( line.toLowerCase( ).contains( ggpkDDSFilePath.toLowerCase(  ) ) ) {
+                    String textureName = line.substring( 1 , line.indexOf( "\" " )  );
+
+                    if ( !validation.contains( textureName ) ) {
+
+                        for ( String tPath : wantedTextures ) {
+                            if ( textureName.equalsIgnoreCase( tPath ) ) {
+                                Texture texture = new Texture( tPath, ggpkDDSFilePath, getCoordinatesFrom( line ) );
+
+                                textures.add( texture );
+                            }
+                        }
+
+                        validation.add( textureName );
+                    }
+                }
+            }
+        } catch ( IOException | NullPointerException e ) {
+            LOGGER.log( Level.SEVERE , e.getMessage( ) , e );
+        }
+
+        return textures;
+
+    }
+
 
     /**
      * Gets a textures x,y coordinates from the provided uiimages.txt line.

@@ -17,8 +17,8 @@ import java.util.logging.Logger;
  * file.
  *
  * @author Frizzy
- * @version 0.0.1
- * @since 0.0.1
+ * @version 0.0.2
+ * @since 0.0.2
  */
 public class BankExtractor {
 
@@ -31,10 +31,11 @@ public class BankExtractor {
     private final String toolsPath;
 
     /**
-     *
+     * Creates the BankExtractor instance.
+     * <br>
+     * Can throw a FileNotFoundException if quickbms.exe or script.bms is not found.
      */
     public BankExtractor ( String toolsPath ) throws FileNotFoundException {
-
         if ( !Files.exists( Path.of( toolsPath + File.separator + "quickbms.exe" ) ))
             throw new FileNotFoundException( "quickbms.exe could not be found." );
         if ( !Files.exists( Path.of( toolsPath + File.separator + "Script.bms" ) ) )
@@ -44,44 +45,13 @@ public class BankExtractor {
     }
 
     /**
-     * Extracts the .wav files from the .bank file in the specified path.
-     * @param bankSourceFilePath The path to the .bank file.
-     * @return A list of .wav files, if extraction was successful.
-     */
-    public List < File > extractWavFiles( Path bankSourceFilePath ) {
-        File bankFile = bankSourceFilePath.toFile();
-
-        if ( bankFile.exists() ) {
-            try {
-                Optional < File > opt = completeExtraction( bankFile );
-                List < File > files = new ArrayList <>(  );
-
-                opt.ifPresent( wavFilesDir -> {
-                    File[] wavFiles = wavFilesDir.listFiles();
-
-                    if ( wavFiles != null)
-                        Collections.addAll( files, wavFiles );
-                } );
-
-                return files;
-            } catch ( IOException e ) {
-                LOGGER.log( Level.SEVERE, e.getMessage(), e );
-            }
-        }
-
-        return Collections.emptyList();
-    }
-
-    /**
      * Extracts all .wav files from the banks in the provided list.
      * @return A map with the .bank file as the key and a list of wav files as the values.
      */
-    public Map < File , List < File > > extractAllWavFiles ( List < File > banks  ) {
-        Map < File , List < File > > all = new HashMap <>(  );
-
-        for ( File bank : banks ) {
+    public List < BankFile > extractWavFiles( List < BankFile > banks  ) {
+        for ( BankFile bank : banks ) {
             try {
-                Optional < File > opt = completeExtraction( bank );
+                Optional < File > opt = completeExtraction( bank.getFile() );
                 List < File > wavFiles = new ArrayList <>( );
 
                 opt.ifPresent( wavFilesDir -> {
@@ -89,7 +59,7 @@ public class BankExtractor {
 
                     if ( files != null ) {
                         Collections.addAll( wavFiles , files );
-                        all.put( bank , wavFiles );
+                        bank.setWavFiles( wavFiles );
                     }
                 } );
             } catch ( IOException e ) {
@@ -97,7 +67,7 @@ public class BankExtractor {
             }
         }
 
-        return all;
+        return banks;
     }
 
     /**
@@ -116,12 +86,12 @@ public class BankExtractor {
 
         if ( !bankOutputDir.exists() ) {
             boolean created = bankOutputDir.mkdir();
-            LOGGER.log( Level.WARNING, "Bank output directory could not be created. Extraction will not complete." );
+
             if ( !created ) {
+                LOGGER.log( Level.WARNING, "Bank output directory could not be created. Extraction will not complete." );
                 return Optional.empty( );
             }
         }
-
 
         CommandLine bmsCmdLine = new CommandLine( bmsExePath );
 
@@ -189,6 +159,9 @@ public class BankExtractor {
                     LOGGER.log( Level.WARNING,
                             "Executor did not return a successful exit code. The wav files may not have been extracted." );
                 }
+            } else {
+                LOGGER.log( Level.WARNING, "Bank tools were not successfully exported. The extraction process" +
+                        " cannot continue.");
             }
         } else {
             LOGGER.log( Level.WARNING, "Executor did not return a successful exit code." +

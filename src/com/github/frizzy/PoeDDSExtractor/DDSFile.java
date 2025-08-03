@@ -24,7 +24,7 @@ public class DDSFile {
      * Textures that have not been extracted and are stored
      * in the .dds file.
      */
-    private final List < Texture > unextractedTextures;
+    private List < Texture > unextractedTextures;
 
     /**
      * Textures that have been extracted.
@@ -68,6 +68,14 @@ public class DDSFile {
      */
     public void setExtractedTextures ( List < File > textures ) {
         this.extractedTextures = textures;
+    }
+
+    /**
+     *
+     * @param textures
+     */
+    public void setUnextractedTextures ( List < Texture > textures ) {
+        this.unextractedTextures = textures;
     }
 
     /**

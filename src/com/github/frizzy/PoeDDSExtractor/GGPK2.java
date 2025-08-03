@@ -148,6 +148,45 @@ public class GGPK2 {
         this.duplicateValue = newValue;
     }
 
+    public List < BankFile > extractBank ( final Path outputPath, List < String > wantedBanks ) {
+        List < BankFile > extracted = new ArrayList <>(  );
+        File contentGGPK = contentPath.toFile();
+        File outputDirectory = outputPath.toFile();
+
+        if ( ( !contentGGPK.exists() || !outputDirectory.exists() )  ) {
+            LOGGER.log( Level.WARNING, "One of the files provided does not exist." );
+            return extracted;
+        }
+
+        if ( ( !contentGGPK.isFile() || !outputDirectory.isDirectory() ) ) {
+            LOGGER.log( Level.WARNING, "One of the files provided is not of the correct type." );
+            return extracted;
+        }
+
+        if ( wantedBanks.isEmpty() ) {
+            LOGGER.log( Level.WARNING, "Wanted files list is empty. Extraction operation will not continue." );
+            return extracted;
+        }
+
+        for ( String wb : wantedBanks ) {
+            try {
+                Optional < ? > opt = extractContentFile( outputPath, wb );
+
+                opt.ifPresentOrElse( a  -> {
+                    if ( a instanceof BankFile bf ) {
+                        extracted.add( bf );
+                    }
+                }, ( ) -> {
+
+                });
+            } catch ( IOException e ) {
+                LOGGER.log( Level.SEVERE, e.getMessage(), e );
+            }
+        }
+
+        return extracted;
+    }
+
     /**
      * Extracts all the wanted files from the Content.gppk file and saves them to the specified directory.
      * <br>
@@ -163,7 +202,7 @@ public class GGPK2 {
      * @param wantedFiles The internal content.gppk file paths for the wanted .dds files.
      * @return A list of the extracted .dds files.
      */
-    public List < DDSFile > extract ( final Path outputPath, List< String > wantedFiles ) {
+    public List < DDSFile > extractDDS ( final Path outputPath, List< String > wantedFiles ) {
         /*
          * The directories containing the extracted .dds files.
          * Extracted .dds files will be stored in their own directory
@@ -192,8 +231,13 @@ public class GGPK2 {
 
         for ( String wf : wantedFiles ) {
             try {
-                Optional < DDSFile > ef = extractContentFile( outputPath, wf );
-                ef.ifPresentOrElse( a -> extracted.add( ef.get( ) ) , ( ) -> {
+                Optional < ? > ef = extractContentFile( outputPath, wf );
+
+                ef.ifPresentOrElse( a -> {
+                    if ( a instanceof DDSFile df ) {
+                        extracted.add( df );
+                    }
+                } , ( ) -> {
                     LOGGER.log( Level.WARNING, "No file was returned. File for: " + wf + " was not extracted." );
                 } );
             } catch ( IOException e ) {
@@ -209,7 +253,7 @@ public class GGPK2 {
      * values contain the internal path of the .dds file, a list of textures the file contains, and a java.io.File
      * reference to find the .dds file on disk.
      */
-    public List < DDSFile > extractEverything ( final Path outputPath ) {
+    public List < DDSFile > extractEverythingDDS ( final Path outputPath ) {
         List < DDSFile > allFiles = new ArrayList <>(  );
 
         List < String [ ] > gppkFiles = GGPKUtils.getAllLinesSplit( uiimagestxt );
@@ -224,11 +268,13 @@ public class GGPK2 {
 
             if ( !validation.contains( internalPath ) ) {
                 try {
-                    Optional < DDSFile > opt = extractContentFile( outputPath, internalPath );
+                    Optional < ? > opt = extractContentFile( outputPath, internalPath );
 
                     opt.ifPresentOrElse( extracted -> {
-                        allFiles.add( extracted );
-                        LOGGER.log( Level.INFO, "File: " + extracted.getFile().getAbsolutePath() + " was added to map." );
+                        if ( extracted instanceof DDSFile df ) {
+                            allFiles.add( df );
+                        }
+
                     } , ( ) -> {
                         LOGGER.log( Level.WARNING, "Optional returned empty for: " + internalPath +
                                 "\nSome uiimages.txt paths do not produce a .dds file. Validate this is accurate." +
@@ -254,7 +300,6 @@ public class GGPK2 {
      * @param outputPath The path the uiimages.txt file will be extracted to.
      */
     public Optional < File > extractUIImagesTXT ( Path outputPath ) {
-
         try {
             Optional < File > opt = extractTextFile( outputPath, UIIMAGES_TXT_LOC );
             opt.orElseThrow( ( ) -> new NoSuchFileException( "No file was returned. uiimages.txt was not extracted." ) );
@@ -296,7 +341,7 @@ public class GGPK2 {
         final String subbed = wantedFile.substring( wantedFile.lastIndexOf( "/" ) + 1 );
 
         if ( ( overwrite && outputDir.exists() ) || !outputDir.exists() || extension.equalsIgnoreCase( "bank" ) ) {
-            if ( !wantedFile.contains( ".bank" ) ) {
+            if ( !extension.equalsIgnoreCase( "bank" ) ) {
                 boolean created = outputDir.mkdir( );
 
                 if ( !created && !overwrite ) {
@@ -311,7 +356,7 @@ public class GGPK2 {
             commandLine.addArgument( outputDir.toString( ) );
 
             /*
-             * stdOut will allow us to write the cmd.exe output to our logger.
+             * stdOut will allow us to write the cmdline output to our logger.
              */
             ByteArrayOutputStream stdOut = new ByteArrayOutputStream( );
             PumpStreamHandler psh = new PumpStreamHandler( stdOut );
@@ -348,11 +393,11 @@ public class GGPK2 {
      * @param outputPath The directory that will hold the extracted files.
      * @param wantedFile The internal .dds file wanted.
      */
-    private Optional < DDSFile > extractContentFile( Path outputPath, String wantedFile ) throws IOException {
+    private Optional < ? > extractContentFile( Path outputPath, String wantedFile ) throws IOException {
         LOGGER.log( Level.INFO, "STARTING FILE EXTRACTION FOR: " + wantedFile );
 
         /*
-         * We name the output directory to the gppk archive path of the file.
+         * We name the output directory to the ggpk archive path of the file.
          * This is probably temporary.
          * If someone has a better naming convention for the folders of the extracted files, I am all ears.
          * I wanted something relatively identifiable, but I suppose it is not strictly necessary.
@@ -422,20 +467,25 @@ public class GGPK2 {
                              * Write the wanted file internal content.gppk path to be used for future reference.
                              */
                             LOGGER.log( Level.INFO, "Writing path.txt at: " + outputDir + File.separator + "path.txt" );
-
                             Files.writeString( path, wantedFile );
 
-                            List < Texture > textures;
+                            if ( extension.equalsIgnoreCase( "dds" ) ) {
+                                List < Texture > textures;
 
-                            if ( wantedFile.toLowerCase().contains( "divinationcards" ) ) {
-                                textures = GGPKUtils.getAllTexturesFor2( uiDivinationTxt, wantedFile );
-                            } else {
-                                textures = GGPKUtils.getAllTexturesFor2( uiimagestxt, wantedFile );
+                                if ( wantedFile.toLowerCase().contains( "divinationcards" ) ) {
+                                    textures = GGPKUtils.getAllTexturesFor2( uiDivinationTxt, wantedFile );
+                                } else {
+                                    textures = GGPKUtils.getAllTexturesFor2( uiimagestxt, wantedFile );
+                                }
+
+                                DDSFile dFile = new DDSFile( wantedFile, textures, f );
+
+                                return Optional.of( dFile );
+                            } else if ( extension.equalsIgnoreCase( "bank" ) ) {
+                                BankFile bFile = new BankFile( wantedFile, f );
+
+                                return Optional.of( bFile );
                             }
-
-                            DDSFile dFile = new DDSFile( wantedFile, textures, f );
-
-                            return Optional.of( dFile );
                         }
                     }
                 }

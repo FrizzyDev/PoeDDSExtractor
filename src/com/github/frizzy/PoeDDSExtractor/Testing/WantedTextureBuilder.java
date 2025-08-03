@@ -1,5 +1,8 @@
 package com.github.frizzy.PoeDDSExtractor.Testing;
 
+import com.github.frizzy.PoeDDSExtractor.DDSFile;
+import com.github.frizzy.PoeDDSExtractor.GGPKUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,90 +21,85 @@ import java.util.Map;
  */
 public class WantedTextureBuilder {
 
-    private List < File > convertedFiles;
+    private File txtFile;
 
     /**
      * The list does not necessarily have to be the converted files. A list of all the .dds files
      * can be used as well, as each file is just used to locate the path.txt file that was created when
      * originally extracting the .dds files.
      */
-    public WantedTextureBuilder ( List < File > convertedFiles ) {
-        this.convertedFiles = convertedFiles;
+    public WantedTextureBuilder ( File uiTxtFile ) {
+        this.txtFile = uiTxtFile;
     }
 
     /**
      * Builds a map, with the keys being either a .dds or .png file reference, and the values being a List
      * of paths pointing to the textures stored in each file.
      */
-    public Map < File, List < String > > buildWantedTextures ( ) throws IOException {
-        Map < File, List < String > > map = new HashMap <>(  );
-
-        for ( File pngFile : convertedFiles ) {
-            File pathTxt = new File( pngFile.getParentFile().getAbsolutePath() + File.separator + "path.txt" );
-
-            if ( pathTxt.exists() ) {
-                String path = Files.readString( pathTxt.toPath() );
+    public List < DDSFile > buildWantedTextures ( List < DDSFile > ddsFiles ) throws IOException {
+        for ( DDSFile dFile : ddsFiles ) {
+                String path = dFile.getDdsPath();
 
                 switch ( path ) {
                     case "art/textures/interface/2d/2dart/uiimages/common/4k/1.dds" -> {
-                        map.put( pngFile, getWanted4k1DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted4k1DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/common/4k/2.dds" -> {
-                        map.put( pngFile, getWanted4k2DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted4k2DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/common/4k/3.dds" -> {
-                        map.put( pngFile, getWanted4k3DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted4k3DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/4k/6.dds" -> {
-                        map.put( pngFile, getWanted4k6DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted4k6DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/4k/11.dds"  -> {
-                        map.put( pngFile, getWanted4k11DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted4k11DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/1.dds" -> {
-                        map.put( pngFile, getWanted1DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted1DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/2.dds" -> {
-                        map.put( pngFile, getWanted2DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted2DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/3.dds" -> {
-                        map.put( pngFile, getWanted3DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted3DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/4.dds" -> {
-                        map.put( pngFile, getWanted4DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted4DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/5.dds" -> {
-                        map.put( pngFile, getWanted5DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted5DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/7.dds" -> {
-                        map.put( pngFile, getWanted7DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted7DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/10.dds" -> {
-                        map.put( pngFile, getWanted10DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted10DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/13.dds" -> {
-                        map.put( pngFile, getWanted13DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted13DDSTextures() ) );;
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/15.dds" -> {
-                        map.put( pngFile, getWanted15DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted15DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/16.dds" -> {
-                        map.put( pngFile, getWanted16DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted16DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/17.dds" -> {
-                        map.put( pngFile, getWanted17DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWanted17DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/1.dds" -> {
-                        map.put( pngFile, getWantedM1DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWantedM1DDSTextures() ) );
                     }
                     case "art/textures/interface/2d/2dart/uiimages/ingame/marketplace/2.dds" -> {
-                        map.put( pngFile, getWantedM2DDSTextures() );
+                        dFile.setUnextractedTextures( GGPKUtils.getSpecificTexturesFor( txtFile, path, getWantedM2DDSTextures() ) );
                     }
-                }
+
             }
         }
 
-        return map;
+        return ddsFiles;
     }
 
     public List < String > getWanted4k1DDSTextures ( ) {
