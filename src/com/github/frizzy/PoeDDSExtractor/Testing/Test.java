@@ -14,7 +14,16 @@ import java.util.concurrent.TimeUnit;
 
 public class Test {
 
-    public static void main( String[] args ) throws IOException {
+    public static void main( String[] args ) throws IOException, GGPKException {
+        String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
+        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
+        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
+        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
+
+        ggpk.extractUIImagesTXT( outputLocation );
+    }
+
+    public static void testBank ( ) throws FileNotFoundException, GGPKException {
         String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing" );
@@ -46,7 +55,7 @@ public class Test {
         return list;
     }
 
-    public void testGGPK2 ( ) throws IOException {
+    public void testGGPK2 ( ) throws IOException, GGPKException {
         String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );

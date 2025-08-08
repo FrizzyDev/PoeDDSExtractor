@@ -9,6 +9,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,6 +43,13 @@ public class BankExtractor {
             throw new FileNotFoundException( "script.bms could not be found." );
 
         this.toolsPath = toolsPath;
+    }
+
+    /**
+     * Adds a handler to the logger.
+     */
+    public void addLoggerHandler ( Handler handler ) {
+        LOGGER.addHandler( handler );
     }
 
     /**
@@ -111,7 +119,7 @@ public class BankExtractor {
             LOGGER.log( Level.FINE, bmsOut.toString() );
             ToolsUnpacker unpacker = new ToolsUnpacker();
 
-            boolean success = unpacker.extractBankToolsTo(
+            boolean success = unpacker.exportBankToolsTo(
                     Path.of( bankOutputDir + File.separator + "bank_tools.zip" ), bankOutputDir.toPath() );
 
             if ( success ) {

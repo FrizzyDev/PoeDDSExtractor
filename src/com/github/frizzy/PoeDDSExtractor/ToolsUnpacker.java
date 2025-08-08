@@ -22,7 +22,7 @@ import java.util.zip.ZipInputStream;
  * file for the LibGPPK3 release.
  *
  * @author Frizzy
- * @version 0.0.2
+ * @version 0.0.1
  */
 public class ToolsUnpacker {
 
@@ -32,36 +32,22 @@ public class ToolsUnpacker {
 
     }
 
-    /**
-     * Exports the convert.bat file to the specified directory/file.
-     * <br>
-     * I was original here! I didn't copy it from Stack overflow
-     */
-    public void exportBat ( Path out ) {
-        final String resource = "/com/github/frizzy/PoeDDSExtractor/Resources/convert.bat";
-        try ( InputStream is = ToolsUnpacker.class.getResourceAsStream( resource ) ) {
-            Files.copy( is, out );
-        } catch ( IOException e ) {
-            LOGGER.log( Level.SEVERE, e.getMessage(), e );
-        }
-    }
-
-    /**
-     * Exports the ExtractGPPK.exe file to the specified directory/file.
-     * <br>
-     * ExtractGPPK.exe is a command line tool I made to extract .bank files and
-     * is not included with LibGPPK3. This tool requires the other files included with
-     * LibGGPK3 and should be extracted to the same directory.
-     * @param out
-     */
-    public void exportExtractExe ( Path out ) {
-        final String resource = "/com/github/frizzy/PoeDDSExtractor/Resources/ExtractGPPK.exe";
-        try ( InputStream is = ToolsUnpacker.class.getResourceAsStream( resource ) ) {
-            Files.copy( is, out );
-        } catch ( IOException e ) {
-            LOGGER.log( Level.SEVERE, e.getMessage(), e );
-        }
-    }
+//    /**
+//     * Exports the ExtractGPPK.exe file to the specified directory/file.
+//     * <br>
+//     * ExtractGPPK.exe is a command line tool I made to extract .bank files and
+//     * is not included with LibGPPK3. This tool requires the other files included with
+//     * LibGGPK3 and should be extracted to the same directory.
+//     * @param out
+//     */
+//    public void exportExtractExe ( Path out ) {
+//        final String resource = "/com/github/frizzy/PoeDDSExtractor/Resources/ExtractGPPK.exe";
+//        try ( InputStream is = ToolsUnpacker.class.getResourceAsStream( resource ) ) {
+//            Files.copy( is, out );
+//        } catch ( IOException e ) {
+//            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+//        }
+//    }
 
     /**
      * Downloads LibGPPK windows release and returns the path on disk.
@@ -83,11 +69,84 @@ public class ToolsUnpacker {
     }
 
     /**
+     * Exports the convert.bat file to the specified directory/file.
+     * <br>
+     * Returns true if successful.
+     */
+    public void exportBat ( Path out ) {
+        try ( InputStream is = getStreamFor( "/com/github/frizzy/PoeDDSExtractor/Resources/convert.bat" ) ) {
+            Files.copy( is, out );
+        } catch ( IOException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+        }
+    }
+
+    /**
+     * Exports texconv.exe to the path provided.
+     * <br>
+     * Returns true if successful.
+     */
+    public boolean exportTexConvTo ( Path texPath ) {
+        try ( InputStream stream = getStreamFor( "/com/github/frizzy/PoeDDSExtractor/Resources/texconv.exe" ) ) {
+            Files.copy( stream, texPath );
+
+            try ( InputStream cStream = getStreamFor( "/com/github/frizzy/PoeDDSExtractor/Resources/texconv_copyright.txt" ) ) {
+                final String s = texPath.toString();
+                final String p = s.substring( 0, s.lastIndexOf( "\\" ) + 1 );
+                Files.copy( cStream, Path.of( p + File.separator + "texconv_copyright.txt" ) );
+            }
+        } catch ( IOException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Exports the LibGGPK3 tools needed.
+     * <br>
+     * Returns true if successful.
+     */
+    public boolean exportGGPKToolsTo ( Path zipPath, Path outPath ) {
+        try ( InputStream stream = getStreamFor( "/com/github/frizzy/PoeDDSExtractor/Resources/LibGGPK3.zip" ) ) {
+            Files.copy( stream, zipPath );
+            unzip( zipPath, outPath );
+
+            try ( InputStream cStream = getStreamFor( "/com/github/frizzy/PoeDDSExtractor/Resources/libggpk3_copyright.txt" ) ) {
+                Files.copy( cStream, Path.of( outPath + File.separator + "libggpk3_copyright.txt" ) );
+            }
+        } catch ( IOException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     *
+     * @param zipPath The path to the bank_tools.zip on disk.
+     * @param outDirPath The directory the contents of bank
+     */
+    public boolean exportBankToolsTo( Path zipPath, Path outDirPath )  {
+        try ( InputStream stream = getStreamFor( "/com/github/frizzy/PoeDDSExtractor/Resources/bank_tools.zip" ) ) {
+            Files.copy( stream, zipPath);
+            unzip( zipPath, outDirPath );
+        } catch ( IOException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Extracts LibGPPK3 download.
      * <br>
      * <a href="https://stackoverflow.com/questions/10633595/java-zip-how-to-unzip-folder">Stack Overflow</a>
      */
-    public void unzip(Path zip, Path targetDir)  {
+    private void unzip(Path zip, Path targetDir)  {
 
         try ( InputStream is = new FileInputStream( zip.toFile() ) ) {
             targetDir = targetDir.toAbsolutePath();
@@ -114,28 +173,8 @@ public class ToolsUnpacker {
         }
     }
 
-    /**
-     *
-     * @param zipPath The path to the bank_tools.zip on disk.
-     * @param outDirPath The directory the contents of bank_tools.zip will be extracted to.
-     */
-    public boolean extractBankToolsTo ( Path zipPath, Path outDirPath )  {
-        final String resourcePath = "/com/github/frizzy/PoeDDSExtractor/Resources/bank_tools.zip";
-        InputStream stream = BankExtractor.class.getResourceAsStream( resourcePath );
-
-        if ( stream != null ) {
-            try {
-                Files.copy( stream, zipPath);
-
-                ToolsUnpacker unpacker = new ToolsUnpacker();
-                unpacker.unzip( zipPath, outDirPath );
-            } catch ( IOException e ) {
-                LOGGER.log( Level.SEVERE, e.getMessage(), e );
-                return false;
-            }
-        }
-
-        return true;
+    private InputStream getStreamFor ( final String resourcePath ) {
+        return ToolsUnpacker.class.getResourceAsStream( resourcePath );
     }
 
     /**

@@ -13,6 +13,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -64,6 +65,13 @@ public class DDSConverter2 {
         this.convertBat = convertBatPath.toFile();
         this.texConv = texConvPath.toFile();
         this.overwrite = overwrite;
+    }
+
+    /**
+     * Adds the handler to the logger.
+     */
+    public void addLoggerHandler ( Handler handler ) {
+        LOGGER.addHandler( handler );
     }
 
     /**

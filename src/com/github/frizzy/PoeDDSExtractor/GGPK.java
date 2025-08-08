@@ -92,16 +92,7 @@ public class GGPK {
 
         extractBundledGGPKexe = bgtOpt.orElseThrow(
                 ( ) -> new FileNotFoundException ( "ExtractBundledGGPK3.exe was not found." ) );
-
-        if ( egOpt.isPresent() ) {
-            extractGGPKexe = egOpt.get();
-        } else {
-            ToolsUnpacker unpacker = new ToolsUnpacker();
-            unpacker.exportExtractExe( Path.of( ggpkPath + File.separator + GGPK_TOOL ) );
-
-            extractGGPKexe = getGPPKExe( ggpkPath, GGPK_TOOL ).orElseThrow(
-                    ( ) -> new FileNotFoundException( "ExtractGGPK.exe export failed as the file cannot be found." ) );
-        }
+        extractGGPKexe = egOpt.orElseThrow( ( ) -> new FileNotFoundException( "ExtractGGPK3.exe was not found." ) );
 
         if ( !Files.exists( contentPath ) )
             throw new FileNotFoundException( "Content.gppk was not found" );

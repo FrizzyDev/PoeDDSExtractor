@@ -6,6 +6,7 @@ import java.awt.image.RasterFormatException;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,6 +43,13 @@ public class DDSExtractor2 {
     public DDSExtractor2( File txtFile , boolean overwrite ) {
         this.txtFile = txtFile;
         this.overwrite = overwrite;
+    }
+
+    /**
+     * Adds a handler to the logger.
+     */
+    public void addLoggerHandler ( Handler handler ) {
+        LOGGER.addHandler( handler );
     }
 
     /**

@@ -1,18 +1,18 @@
 package com.github.frizzy.PoeDDSExtractor;
 
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.commons.exec.*;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -98,7 +98,7 @@ public class GGPK2 {
      *                  being able to execute ExtractBundledGGPK3.exe multiple times at once.
      * @param overwrite Determines if previously extracted files should be overwritten.
      */
-    public GGPK2( final String ggpkPath, Path contentPath, boolean duplicate, boolean overwrite ) throws FileNotFoundException {
+    public GGPK2( final String ggpkPath, Path contentPath, boolean duplicate, boolean overwrite ) throws FileNotFoundException, GGPKException {
         this.contentPath = contentPath;
         this.overwrite = overwrite;
 
@@ -107,36 +107,45 @@ public class GGPK2 {
 
         extractBundledGGPKexe = bgtOpt.orElseThrow(
                 ( ) -> new FileNotFoundException ( "ExtractBundledGGPK3.exe was not found." ) );
-
-        if ( egOpt.isPresent() ) {
-            extractGGPKexe = egOpt.get();
-        } else {
-            ToolsUnpacker unpacker = new ToolsUnpacker();
-            unpacker.exportExtractExe( Path.of( ggpkPath + File.separator + GGPK_TOOL ) );
-
-            extractGGPKexe = getGPPKExe( ggpkPath, GGPK_TOOL ).orElseThrow(
-                    ( ) -> new FileNotFoundException( "ExtractGGPK.exe export failed as the file cannot be found." ) );
-        }
+        extractGGPKexe = egOpt.orElseThrow( ( ) -> new FileNotFoundException( "ExtractGGPK3.exe was not found." ) );
 
         if ( !Files.exists( contentPath ) )
             throw new FileNotFoundException( "Content.gppk was not found" );
 
-        this.uiimagestxt = extractUIImagesTXT(
-                Path.of( ggpkPath + File.separator + "uiimages.txt" ) ).orElseThrow( ( ) ->
-                        new FileNotFoundException( "uiimages.txt was not found" ) );
-        this.uiDivinationTxt = extractUIDivinationImagesTXT(
-                Path.of( ggpkPath + File.separator + "uidivinationimages.txt" ) ).orElseThrow( ( ) ->
-                new FileNotFoundException( "uidivinationimages.txt not found." ) );
+        final Path gp = Path.of( ggpkPath );
+        uiimagestxt = extractUIImagesTXT( gp )
+                .orElseThrow( ( ) ->
+                        new GGPKException( "uiimages.txt was not returned. GGPK2 extraction processes will not function." ) );
+
+        uiDivinationTxt = extractUIDivinationImagesTXT( gp )
+                .orElseThrow( ( ) ->
+                        new GGPKException( "uidivinationimages.txt was not returned. GGPK2 extraction processes will not function." ) );
     }
 
+    /**
+     * Adds a handler to the logger.
+     */
+    public void addLoggerHandler ( Handler handler ) {
+        LOGGER.addHandler( handler );
+    }
+
+    /**
+     * Returns the uiimagestxt file.
+     */
     public File getuiImagesTxtFile ( ) {
         return uiimagestxt;
     }
 
+    /**
+     * Returns the uidivinationtxt file.
+     */
     public File getUiDivinationTxtFile ( ) {
         return uiDivinationTxt;
     }
 
+    /**
+     * If previously extracted files should be overwritten.
+     */
     public void setOverwrite ( boolean overwrite ) {
         this.overwrite = overwrite;
     }
@@ -148,6 +157,9 @@ public class GGPK2 {
         this.duplicateValue = newValue;
     }
 
+    /**
+     * Extracts the wanted .bank files and returns them in a list.
+     */
     public List < BankFile > extractBank ( final Path outputPath, List < String > wantedBanks ) {
         List < BankFile > extracted = new ArrayList <>(  );
         File contentGGPK = contentPath.toFile();
@@ -202,7 +214,10 @@ public class GGPK2 {
      * @param wantedFiles The internal content.gppk file paths for the wanted .dds files.
      * @return A list of the extracted .dds files.
      */
-    public List < DDSFile > extractDDS ( final Path outputPath, List< String > wantedFiles ) {
+    public List < DDSFile > extractDDS ( final Path outputPath, List< String > wantedFiles ) throws GGPKException {
+        if ( uiimagestxt == null || uiDivinationTxt == null)
+            throw new GGPKException( "ui txt file is null. Extraction processes cannot continue." );
+
         /*
          * The directories containing the extracted .dds files.
          * Extracted .dds files will be stored in their own directory
@@ -253,7 +268,10 @@ public class GGPK2 {
      * values contain the internal path of the .dds file, a list of textures the file contains, and a java.io.File
      * reference to find the .dds file on disk.
      */
-    public List < DDSFile > extractEverythingDDS ( final Path outputPath ) {
+    public List < DDSFile > extractEverythingDDS ( final Path outputPath ) throws GGPKException {
+        if ( uiimagestxt == null || uiDivinationTxt == null)
+            throw new GGPKException( "ui txt file is null. Extraction processes cannot continue." );
+
         List < DDSFile > allFiles = new ArrayList <>(  );
 
         List < String [ ] > gppkFiles = GGPKUtils.getAllLinesSplit( uiimagestxt );
@@ -302,7 +320,8 @@ public class GGPK2 {
     public Optional < File > extractUIImagesTXT ( Path outputPath ) {
         try {
             Optional < File > opt = extractTextFile( outputPath, UIIMAGES_TXT_LOC );
-            opt.orElseThrow( ( ) -> new NoSuchFileException( "No file was returned. uiimages.txt was not extracted." ) );
+            opt.orElseThrow( ( ) -> new ExecuteException( "uiimages.txt file was not returned. This likely means the extract tool" +
+                    " encountered an error. Check if you do not have the Content.ggpk file already opened in another tool.", -1 ) );
 
             return opt;
         } catch ( IOException e ) {
@@ -323,7 +342,8 @@ public class GGPK2 {
 
         try {
             Optional < File >  opt = extractTextFile( outputPath, UIDIVINATION_TXT_LOC );
-            opt.orElseThrow( ( ) -> new NoSuchFileException( "No file was returned. uidivinationimages.txt was not extracted." ) );
+            opt.orElseThrow( ( ) -> new ExecuteException( "uidivinationimages.txt file was not returned. This likely means the extract tool" +
+                    " encountered an error. Check if you do not have the Content.ggpk file already opened in another tool.", -1 ) );
 
             return opt;
         } catch ( IOException e ) {
@@ -334,6 +354,10 @@ public class GGPK2 {
     }
 
     private Optional < File > extractTextFile ( Path outputPath, String wantedFile ) throws IOException {
+        if (GGPKUtils.testLock( contentPath )) {
+            throw new IOException( "Content.ggpk file is locked. Check to see if another tool is currently using the file." );
+        }
+
         String extension = FilenameUtils.getExtension( wantedFile );
         String temp = wantedFile.replaceAll( "/", "_" ).replace( ".txt", "" );
 
@@ -350,6 +374,8 @@ public class GGPK2 {
                 }
             }
 
+
+
             CommandLine commandLine = new CommandLine( extractBundledGGPKexe );
             commandLine.addArgument( contentPath.toString( ) );
             commandLine.addArgument( wantedFile );
@@ -361,13 +387,24 @@ public class GGPK2 {
             ByteArrayOutputStream stdOut = new ByteArrayOutputStream( );
             PumpStreamHandler psh = new PumpStreamHandler( stdOut );
             DefaultExecutor executor = DefaultExecutor.builder( ).get( );
+            DefaultExecuteResultHandler handler = new DefaultExecuteResultHandler();
 
+            executor.setExitValue( 0 );
             executor.setStreamHandler( psh );
+            executor.execute( commandLine, handler );
 
-            int exitCode = executor.execute( commandLine );
+            try {
+                handler.waitFor();
+            } catch ( InterruptedException e ) {
+                LOGGER.log( Level.SEVERE, e.getMessage(), e );
+            }
+
+            int exitValue = handler.getExitValue();
+
             LOGGER.log( Level.INFO , stdOut.toString( ) );
 
-            if ( exitCode == 0 ) {
+            if ( exitValue == 0 ) {
+                System.out.println( "Exit value: " + exitValue );
                 File[] files = outputDir.listFiles();
 
                 if ( files != null ) {
@@ -379,6 +416,9 @@ public class GGPK2 {
                         }
                     }
                 }
+            } else {
+                ExecuteException ee = handler.getException();
+                LOGGER.log( Level.SEVERE, ee.getMessage(), ee );
             }
         }
 
@@ -394,7 +434,9 @@ public class GGPK2 {
      * @param wantedFile The internal .dds file wanted.
      */
     private Optional < ? > extractContentFile( Path outputPath, String wantedFile ) throws IOException {
-        LOGGER.log( Level.INFO, "STARTING FILE EXTRACTION FOR: " + wantedFile );
+        if (GGPKUtils.testLock( contentPath )) {
+            throw new IOException( "Content.ggpk file is locked. Check to see if another tool is currently using the file." );
+        }
 
         /*
          * We name the output directory to the ggpk archive path of the file.

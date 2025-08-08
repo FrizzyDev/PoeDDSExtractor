@@ -1,12 +1,14 @@
 package com.github.frizzy.PoeDDSExtractor;
 
 import java.io.*;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,6 +25,33 @@ public class GGPKUtils {
 
     private GGPKUtils( ) {
 
+    }
+
+    /**
+     * Tests if there is a lock on the Content.ggpk file.
+     * @param contentggpkPath Path to the Content.ggpk file.
+     * @return True if there is a lock, false otherwise.
+     */
+    public static boolean testLock ( Path contentggpkPath ) {
+        boolean bLocked = false;
+        File p_fi = contentggpkPath.toFile();
+        try ( RandomAccessFile fis = new RandomAccessFile(p_fi, "rw")) {
+            FileLock lck = fis.getChannel().lock();
+            lck.release();
+        } catch (Exception ex) {
+            bLocked = true;
+        }
+        if (bLocked)
+            return bLocked;
+        // try further with rename
+        String parent = p_fi.getParent();
+        String rnd = UUID.randomUUID().toString();
+        File newName = new File(parent + "/" + rnd);
+        if (p_fi.renameTo(newName)) {
+            newName.renameTo(p_fi);
+        } else
+            bLocked = true;
+        return bLocked;
     }
 
     /**
