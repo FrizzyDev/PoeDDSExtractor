@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings( "all" )
 public class Test {
 
     public static void main( String[] args ) throws IOException, GGPKException, InterruptedException {
