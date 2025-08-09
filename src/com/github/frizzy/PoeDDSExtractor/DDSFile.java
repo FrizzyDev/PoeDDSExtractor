@@ -1,6 +1,6 @@
 package com.github.frizzy.PoeDDSExtractor;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -11,8 +11,12 @@ import java.util.List;
  * @version 0.0.2
  * @since 0.0.2
  */
-public class DDSFile {
+public class DDSFile implements Comparable < DDSFile > {
 
+    /**
+     *
+     */
+    private final String ddsName;
 
     /**
      * The path of the .dds file in the Content.ggpk
@@ -29,44 +33,45 @@ public class DDSFile {
     /**
      * Textures that have been extracted.
      */
-    private List < File > extractedTextures;
+    private List < Path > extractedTextures;
 
     /**
      * The file reference to the .dds file.
      */
-    private final File fReference;
+    private final Path diskPath;
 
     /**
      * The file reference to the .png file, converted
      * from the .dds file.
      */
-    private File pngFile;
+    private Path pngPath;
 
     /**
      *
      * @param path The path of the DDSFile in the Content.ggpk file.
      * @param textures A list of textures the DDSFile contains.
-     * @param fRef The on disk file reference.
+     * @param diskPath The on disk file reference.
      */
-    public DDSFile (  String path, List < Texture> textures, File fRef ) {
+    public DDSFile (  String path, List < Texture> textures, Path diskPath ) {
         this.ddsPath = path;
         this.unextractedTextures = textures;
-        this.fReference = fRef;
+        this.diskPath = diskPath;
+        this.ddsName = diskPath.getFileName().toString();
     }
 
     /**
      * Sets the .png file reference of this DDSFile.
      * The .png file is set when the .dds file is converted via DDSConverter.
      */
-    public void setPngFile( File pngFile ) {
-        this.pngFile = pngFile;
+    public void setPNGPath( Path pngPath ) {
+        this.pngPath = pngPath;
     }
 
     /**
      * Sets the list of extracted textures.
      * Set when the DDSFile is passed to the DDSExtractor.
      */
-    public void setExtractedTextures ( List < File > textures ) {
+    public void setExtractedTextures ( List < Path > textures ) {
         this.extractedTextures = textures;
     }
 
@@ -99,23 +104,46 @@ public class DDSFile {
      * This will return null until the textures have been extracted by
      * DDSExtractor.
      */
-    public List < File > getExtractedTextures ( ) {
+    public List < Path > getExtractedTextures ( ) {
         return extractedTextures;
+    }
+
+    /**
+     * Returns the name of the .dds file.
+     */
+    public String getName ( ) {
+        return ddsName;
     }
 
     /**
      * Returns the File reference of the .dds file on disk.
      */
-    public File getFile ( ) {
-        return fReference;
+    public Path getDiskPath( ) {
+        return diskPath;
     }
 
     /**
      * Returns the File reference of the .png file on disk. This will
      * return null until the .dds file has been converted.
      */
-    public File getPngFile ( ) {
-        return pngFile;
+    public Path getPNGPath( ) {
+        return pngPath;
+    }
+
+    @Override
+    public String toString( ) {
+        return "DDSFile{" +
+                "ddsPath='" + ddsPath + '\'' +
+                ", unextractedTextures=" + unextractedTextures +
+                ", extractedTextures=" + extractedTextures +
+                ", diskPath=" + diskPath +
+                ", pngPath=" + pngPath +
+                '}';
+    }
+
+    @Override
+    public int compareTo( DDSFile o ) {
+        return o.getName().compareTo( getName() );
     }
 }
 

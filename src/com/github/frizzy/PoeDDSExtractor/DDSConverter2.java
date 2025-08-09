@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Handler;
@@ -90,22 +89,22 @@ public class DDSConverter2 {
      */
     public List < DDSFile > convert ( List < DDSFile > ddsFiles ) {
         //The directory that convert.bat and texconv.exe will be copied to.
-        File converterOutLoc = null;
+        Path converterOutLoc = null;
 
         for ( DDSFile ddsFile : ddsFiles ) {
-            File ref = ddsFile.getFile();
+            Path ref = ddsFile.getDiskPath();
 
-            if ( ref.getName().endsWith( ".dds" ) ) {
-                File pngFile = new File( ref.getAbsolutePath().replace( ".dds", ".png" ) );
+            if ( ref.getFileName().toString().endsWith( ".dds" ) ) {
+                Path pngFile = Path.of ( ref.toAbsolutePath().toString().replace( ".dds", ".png" ) );
 
-                if ( ( pngFile.exists() && overwrite ) || !pngFile.exists() ) {
-                    converterOutLoc = ref.getParentFile();
+                if ( ( Files.exists( pngFile )  && overwrite ) || !Files.exists( pngFile ) ) {
+                    converterOutLoc = ref.getParent ( );
                     copyConverterTo( converterOutLoc );
 
-                    Optional < File > opt = executeConvert( ref, converterOutLoc );
+                    Optional < Path > opt = executeConvert( ref, converterOutLoc );
 
                     if ( opt.isPresent() ) {
-                        ddsFile.setPngFile( pngFile );
+                        ddsFile.setPNGPath( pngFile );
                     } else {
                         LOGGER.log( Level.WARNING, "No png file was returned." );
                     }
@@ -115,18 +114,22 @@ public class DDSConverter2 {
             //Conversion is done, delete the .bat and .exe files.
             if ( converterOutLoc != null ) {
                 LOGGER.log( Level.INFO, "Deleting convert.bat and texconv.exe." );
-                File batFile = new File( converterOutLoc.getAbsolutePath() + File.separator + CONVERT_BAT );
-                File exeFile = new File( converterOutLoc.getAbsolutePath() + File.separator + TEXCONV_EXE );
+                Path batFile = Path.of ( converterOutLoc.toAbsolutePath() + File.separator + CONVERT_BAT );
+                Path exeFile = Path.of ( converterOutLoc.toAbsolutePath() + File.separator + TEXCONV_EXE );
 
-                boolean batDeleted = batFile.delete();
-                boolean exeDeleted = exeFile.delete();
+                try {
+                    boolean batDeleted = Files.deleteIfExists( batFile );
+                    boolean exeDeleted = Files.deleteIfExists( exeFile );
 
-                if ( !batDeleted ) {
-                    LOGGER.log( Level.WARNING, "convert.bat was not deleted." );
-                }
+                    if ( !batDeleted ) {
+                        LOGGER.log( Level.WARNING, "convert.bat was not deleted." );
+                    }
 
-                if ( !exeDeleted ) {
-                    LOGGER.log( Level.WARNING, "texconv.exe was not deleted." );
+                    if ( !exeDeleted ) {
+                        LOGGER.log( Level.WARNING, "texconv.exe was not deleted." );
+                    }
+                } catch ( IOException e ) {
+                    LOGGER.log( Level.SEVERE, e.getMessage(), e );
                 }
             }
         }
@@ -139,11 +142,11 @@ public class DDSConverter2 {
      * <br>
      * Returns the created .png file.
      */
-    private Optional < File > executeConvert ( File ddsFile, File converterLoc ) {
-        File batFile = new File( converterLoc.getAbsolutePath() + File.separator + CONVERT_BAT );
+    private Optional < Path > executeConvert ( Path ddsFile, Path converterLoc ) {
+        Path batFile = Path.of ( converterLoc.toAbsolutePath() + File.separator + CONVERT_BAT );
 
         CommandLine cmdLine = new CommandLine( "cmd.exe" );
-        cmdLine.addArgument( "/C " + "\"\"" + batFile.getAbsolutePath() + "\"\"", false );
+        cmdLine.addArgument( "/C " + "\"\"" + batFile.toAbsolutePath() + "\"\"", false );
 
         ByteArrayOutputStream stdOut = new ByteArrayOutputStream(  );
         PumpStreamHandler psh = new PumpStreamHandler( stdOut );
@@ -156,8 +159,8 @@ public class DDSConverter2 {
             LOGGER.log( Level.INFO, stdOut.toString() );
 
             if ( exitCode == 0 ) {
-                String name = ddsFile.getName().replace( ".dds", ".png" );
-                return Optional.of( new File ( converterLoc.getAbsolutePath() + File.separator + name ) );
+                String name = ddsFile.getFileName().toString().replace( ".dds", ".png" );
+                return Optional.of( Path.of ( converterLoc.toAbsolutePath() + File.separator + name ) );
             }
         } catch ( IOException e ) {
             LOGGER.log( Level.SEVERE, e.getMessage(), e );
@@ -169,9 +172,9 @@ public class DDSConverter2 {
     /**
      * Copies texconv.exe and convert.bat to the directory the dds file is located in.
      */
-    private void copyConverterTo( final File ddsFolder ) {
-            copy( convertBat, Path.of( ddsFolder.getAbsolutePath() + File.separator + CONVERT_BAT ) );
-            copy( texConv, Path.of( ddsFolder.getAbsolutePath() + File.separator + TEXCONV_EXE ) );
+    private void copyConverterTo( final Path ddsFolder ) {
+            copy( convertBat, Path.of( ddsFolder.toAbsolutePath() + File.separator + CONVERT_BAT ) );
+            copy( texConv, Path.of( ddsFolder.toAbsolutePath() + File.separator + TEXCONV_EXE ) );
     }
 
     /**

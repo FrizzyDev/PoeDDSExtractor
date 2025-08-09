@@ -1,5 +1,10 @@
 package com.github.frizzy.PoeDDSExtractor;
 
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecuteResultHandler;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.PumpStreamHandler;
+
 import java.io.*;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +30,25 @@ public class GGPKUtils {
 
     private GGPKUtils( ) {
 
+    }
+
+    public static CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > runCommandLine ( final Path tool, String... args ) throws IOException {
+        CommandLine cmdLine = new CommandLine( tool );
+
+        for ( String arg : args ) {
+            cmdLine.addArgument( arg );
+        }
+
+        ByteArrayOutputStream stdOut = new ByteArrayOutputStream( );
+        PumpStreamHandler psh = new PumpStreamHandler( stdOut );
+        DefaultExecutor executor = DefaultExecutor.builder( ).get( );
+        DefaultExecuteResultHandler handler = new DefaultExecuteResultHandler();
+
+        executor.setStreamHandler( psh );
+        executor.setExitValue( 0 );
+        executor.execute( cmdLine, handler );
+
+        return new CommandPair <>( handler, stdOut );
     }
 
     /**
@@ -67,10 +91,10 @@ public class GGPKUtils {
      * The first index is the texture name, the second index is the .dds file path in the gppk file,
      * the third index is the x1, x2, y1, y2 coordinates.
      */
-    public static List < String[] > getAllLinesSplit ( File uiimagesTxt ) {
+    public static List < String[] > getAllLinesSplit ( Path uiimagesTxt ) {
         List < String [ ] > lines = new ArrayList <>(  );
 
-        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( new FileInputStream( uiimagesTxt ) , StandardCharsets.UTF_16LE ) ) ) {
+        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( Files.newInputStream( uiimagesTxt ) , StandardCharsets.UTF_16LE ) ) ) {
             String line;
             while ( ( line = bReader.readLine( ) ) != null ) {
                 String[] split = line.split( "\" " );
@@ -113,11 +137,11 @@ public class GGPKUtils {
     /**
      * Gets all the textures stored in the .dds file of the provided gppk path.
      */
-    public static List < Texture > getAllTexturesFor2( File uiimagesTxt, String gppkDDSFilePath ) {
+    public static List < Texture > getAllTexturesFor2( Path uiimagesTxt, String gppkDDSFilePath ) {
         List < Texture > textures = new ArrayList <>(  );
         List < String > validation = new ArrayList <>(  );
 
-        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( new FileInputStream( uiimagesTxt ) , StandardCharsets.UTF_16LE ) ) ) {
+        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( Files.newInputStream( uiimagesTxt ) , StandardCharsets.UTF_16LE ) ) ) {
             String line;
             while ( ( line = bReader.readLine( ) ) != null ) {
                 if ( line.toLowerCase( ).contains( gppkDDSFilePath.toLowerCase(  ) ) ) {
@@ -141,11 +165,11 @@ public class GGPKUtils {
     /**
      * Gets a list of textures that only match up with the specified wantedTextures list.
      */
-    public static List < Texture > getSpecificTexturesFor ( File txtFile, String ggpkDDSFilePath, List < String > wantedTextures ) {
+    public static List < Texture > getSpecificTexturesFor ( Path txtFile, String ggpkDDSFilePath, List < String > wantedTextures ) {
         List < Texture > textures = new ArrayList <>(  );
         List < String > validation = new ArrayList <>(  );
 
-        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( new FileInputStream( txtFile ) , StandardCharsets.UTF_16LE ) ) ) {
+        try ( BufferedReader bReader = new BufferedReader( new InputStreamReader( Files.newInputStream( txtFile ) , StandardCharsets.UTF_16LE ) ) ) {
             String line;
             while ( ( line = bReader.readLine( ) ) != null ) {
                 if ( line.toLowerCase( ).contains( ggpkDDSFilePath.toLowerCase(  ) ) ) {

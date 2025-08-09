@@ -2,8 +2,10 @@ package com.github.frizzy.PoeDDSExtractor.Testing;
 
 import com.github.frizzy.PoeDDSExtractor.*;
 import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.DefaultExecutor;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,17 +16,29 @@ import java.util.concurrent.TimeUnit;
 
 public class Test {
 
-    public static void main( String[] args ) throws IOException, GGPKException {
+    public static void main( String[] args ) throws IOException, GGPKException, InterruptedException {
         String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
-        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
+        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Bundles2\\_.index.bin" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
-        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
+        Path tool = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\LibGGPK3\\ExtractGGPK.exe" );
+        String asset = "Art/Textures/Interface/2D/2DArt/UIImages/Common/1.dds";
 
-        ggpk.extractUIImagesTXT( outputLocation );
+        CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > pair = GGPKUtils.runCommandLine(
+                tool, "ggpk", contentLocation.toString(), asset, outputLocation.toString() );
+
+        pair.rh.waitFor();
+
+        if ( pair.rh.getExitValue() == 0 ) {
+            System.out.println( pair.bs.toString() );
+        } else {
+            System.out.println( pair.bs.toString() );
+        }
+
+
     }
 
     public static void testBank ( ) throws FileNotFoundException, GGPKException {
-        String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
+        Path ggpkLocation = Path.of( "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3" );
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing" );
 
@@ -36,10 +50,10 @@ public class Test {
 
         for ( BankFile bf : bankFiles ) {
             System.out.println( "Path: " + bf.getPath() );
-            System.out.println( "File: " + bf.getFile().getAbsolutePath() );
+            System.out.println( "File: " + bf.getDiskPath().toAbsolutePath() );
 
-            for ( File wf : bf.getWavFiles() ) {
-                System.out.println( "Wav File: " + wf.getAbsolutePath() );
+            for ( Path wf : bf.getWavFiles() ) {
+                System.out.println( "Wav File: " + wf.toAbsolutePath() );
             }
         }
     }
@@ -56,7 +70,7 @@ public class Test {
     }
 
     public void testGGPK2 ( ) throws IOException, GGPKException {
-        String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
+        Path ggpkLocation = Path.of( "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3" );
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
         Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
@@ -79,8 +93,8 @@ public class Test {
         for ( DDSFile dFile : ddsFiles ) {
 
             System.out.println( "DDSFile path: " + dFile.getDdsPath() );
-            System.out.println( "DDSFile disk path: " + dFile.getFile().getAbsolutePath() );
-            System.out.println( "PNG file disk path: " + dFile.getPngFile().getAbsolutePath() );
+            System.out.println( "DDSFile disk path: " + dFile.getDiskPath().toAbsolutePath() );
+            System.out.println( "PNG file disk path: " + dFile.getPNGPath().toAbsolutePath() );
             System.out.println( "DDS File textures: " );
 
             for ( Texture t : dFile.getUnextractedTextures() ) {
@@ -92,8 +106,8 @@ public class Test {
 
             System.out.println( "DDS Extracted textures: " );
 
-            for ( File f : dFile.getExtractedTextures() ) {
-                System.out.println( "Texture path: " + f.getAbsolutePath() );
+            for ( Path p : dFile.getExtractedTextures() ) {
+                System.out.println( "Texture path: " + p.toAbsolutePath() );
             }
         }
     }

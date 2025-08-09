@@ -6,6 +6,7 @@ import com.github.frizzy.PoeDDSExtractor.GGPKUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,14 +22,14 @@ import java.util.Map;
  */
 public class WantedTextureBuilder {
 
-    private File txtFile;
+    private Path txtFile;
 
     /**
      * The list does not necessarily have to be the converted files. A list of all the .dds files
      * can be used as well, as each file is just used to locate the path.txt file that was created when
      * originally extracting the .dds files.
      */
-    public WantedTextureBuilder ( File uiTxtFile ) {
+    public WantedTextureBuilder ( Path uiTxtFile ) {
         this.txtFile = uiTxtFile;
     }
 

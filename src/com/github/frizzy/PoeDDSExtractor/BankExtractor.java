@@ -1,6 +1,7 @@
 package com.github.frizzy.PoeDDSExtractor;
 
 import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.FilenameUtils;
@@ -12,9 +13,10 @@ import java.util.*;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
- * Extracts .wav files from a ggpk .bank file, utilizing tools in the bank_ tools.zip
+ * Extracts .wav files from a ggpk .bank file, utilizing tools in the bank_tools.zip
  * file.
  *
  * @author Frizzy
@@ -59,15 +61,16 @@ public class BankExtractor {
     public List < BankFile > extractWavFiles( List < BankFile > banks  ) {
         for ( BankFile bank : banks ) {
             try {
-                Optional < File > opt = completeExtraction( bank.getFile() );
+                Optional < Path > opt = completeExtraction( bank.getDiskPath() );
                 List < File > wavFiles = new ArrayList <>( );
 
                 opt.ifPresent( wavFilesDir -> {
-                    File[ ] files = wavFilesDir.listFiles();
+                    try ( Stream < Path > paths = Files.list( wavFilesDir ) ) {
+                        List < Path > pathList = paths.toList();
 
-                    if ( files != null ) {
-                        Collections.addAll( wavFiles , files );
-                        bank.setWavFiles( wavFiles );
+                        bank.setWavFiles( pathList );
+                    } catch ( IOException e ) {
+                        LOGGER.log( Level.SEVERE, e.getMessage(), e );
                     }
                 } );
             } catch ( IOException e ) {
@@ -84,46 +87,43 @@ public class BankExtractor {
      *
      * @param bankFile The bank file .wav files will be extracted from.
      */
-    private Optional < File > completeExtraction ( File bankFile ) throws IOException {
+    private Optional < Path > completeExtraction ( Path bankFile ) throws IOException {
         final String bmsExePath = toolsPath + File.separator + "quickbms.exe";
         final String bmsScriptPath = toolsPath + File.separator + "Script.bms";
-        final String baseName = FilenameUtils.getBaseName( bankFile.getName() );
+        final String baseName = FilenameUtils.getBaseName( bankFile.getFileName().toString() );
 
         //Directory .wav files will be extracted to.
-        File bankOutputDir = new File( bankFile.getParentFile().getAbsolutePath()  + File.separator + baseName );
+        Path bankOutputDir = Path.of ( bankFile.getParent().toAbsolutePath()  + File.separator + baseName );
 
-        if ( !bankOutputDir.exists() ) {
-            boolean created = bankOutputDir.mkdir();
+        if ( !Files.exists( bankOutputDir ) ) {
+            Path created = Files.createDirectory( bankOutputDir );
 
-            if ( !created ) {
+            if ( !Files.exists( created ) ) {
                 LOGGER.log( Level.WARNING, "Bank output directory could not be created. Extraction will not complete." );
                 return Optional.empty( );
             }
         }
 
-        CommandLine bmsCmdLine = new CommandLine( bmsExePath );
+        CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > cPair = GGPKUtils.runCommandLine(
+                Path.of( bmsExePath ), bmsScriptPath, bankFile.toAbsolutePath().toString(), bankOutputDir.toAbsolutePath().toString()  );
 
-        bmsCmdLine.addArgument( bmsScriptPath ); //Path to the script that performs extraction
-        bmsCmdLine.addArgument( bankFile.getAbsolutePath() ); //Path to the bank file
-        bmsCmdLine.addArgument( bankOutputDir.getAbsolutePath() ); // Path to the output dir
+        try {
+            cPair.rh.waitFor();
+        } catch ( InterruptedException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+        }
 
-        ByteArrayOutputStream bmsOut = new ByteArrayOutputStream(  );
-        PumpStreamHandler bmsPsh = new PumpStreamHandler( bmsOut );
-        DefaultExecutor bmsExecutor = DefaultExecutor.builder().get();
-
-        bmsExecutor.setStreamHandler( bmsPsh );
-
-        int bmsExitCode = bmsExecutor.execute( bmsCmdLine );
+        int bmsExitCode = cPair.rh.getExitValue();
 
         if ( bmsExitCode == 0 ) {
-            LOGGER.log( Level.FINE, bmsOut.toString() );
+            LOGGER.log( Level.FINE, cPair.bs.toString() );
             ToolsUnpacker unpacker = new ToolsUnpacker();
 
             boolean success = unpacker.exportBankToolsTo(
-                    Path.of( bankOutputDir + File.separator + "bank_tools.zip" ), bankOutputDir.toPath() );
+                    Path.of( bankOutputDir + File.separator + "bank_tools.zip" ), bankOutputDir );
 
             if ( success ) {
-                final String command = "/C \"\"" + bankOutputDir.getAbsolutePath() + File.separator + "batch.bat\"\"";
+                final String command = "/C \"\"" + bankOutputDir.toAbsolutePath() + File.separator + "batch.bat\"\"";
 
                 CommandLine fsbCmdLine = new CommandLine( "cmd.exe" );
                 fsbCmdLine.addArgument( command, false );
@@ -138,18 +138,18 @@ public class BankExtractor {
 
                 if ( fsbExitCode == 0 ) {
                     LOGGER.log( Level.FINE, fsbOut.toString() );
-                    File[] files = bankOutputDir.listFiles();
+                    try ( Stream < Path > paths = Files.list( bankOutputDir ) ) {
+                        List < Path > pathList = paths.toList();
 
-                    if ( files != null ) {
-                        for ( File f : files ) {
-                            if ( !FilenameUtils.getExtension( f.getName() ).equalsIgnoreCase( "wav" ) ) {
-                                boolean deleted = f.delete();
+                        for ( Path p : pathList ) {
+                            if ( !FilenameUtils.getExtension( p.getFileName().toString() ).equalsIgnoreCase( "wav" ) ) {
+                                boolean deleted = Files.deleteIfExists( p );
 
-                                if ( !deleted ) {
-                                    LOGGER.log( Level.FINE, f.getName() + " deleted" );
+                                if ( deleted ) {
+                                    LOGGER.log( Level.FINE, p.getFileName().toString() + " deleted" );
                                 }
-                            } else if (  f.isDirectory() && f.getName().equalsIgnoreCase( "fmodex" ) ) {
-                                File[] dirFiles = f.listFiles();
+                            } else if (  Files.isDirectory( p ) && p.getFileName().toString().equalsIgnoreCase( "fmodex" ) ) {
+                                File[] dirFiles = p.toFile().listFiles();
 
                                 if ( dirFiles != null ) {
                                     for ( File df : dirFiles ) {
@@ -157,12 +157,14 @@ public class BankExtractor {
                                     }
                                 }
 
-                                f.delete();
-                             }
+                                Files.delete( p );
+                            }
                         }
-                    }
 
-                    return Optional.of( bankOutputDir );
+                        return Optional.of( bankOutputDir );
+                    } catch ( IOException e ) {
+                        LOGGER.log( Level.SEVERE, e.getMessage(), e );
+                    }
                 } else {
                     LOGGER.log( Level.WARNING,
                             "Executor did not return a successful exit code. The wav files may not have been extracted." );
