@@ -1,5 +1,8 @@
 package com.github.frizzy.PoeDDSExtractor;
 
+import com.github.frizzy.PoeDDSExtractor.Command.CommandArg;
+import com.github.frizzy.PoeDDSExtractor.Command.CommandPair;
+import com.github.frizzy.PoeDDSExtractor.DDS.Texture;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.DefaultExecutor;
@@ -12,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,11 +34,22 @@ public class GGPKUtils {
 
     }
 
-    public static CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > runCommandLine ( final Path tool, String... args ) throws IOException {
-        CommandLine cmdLine = new CommandLine( tool );
+    /**
+     * Builds a command line with the specified tool and arguments, then executes the command line.
+     * The ResultHandler and ByteArrayOutputStream set to the executor are returned via CommandPair,
+     * where the exit code and stream can be called on.
+     */
+    @SafeVarargs
+    public static CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > runCommandLine ( final Path tool, CommandArg < String, Boolean >... args ) throws IOException {
+        CommandLine cmdLine;
+        if ( tool.toString().equalsIgnoreCase( "cmd.exe" ) ) {
+            cmdLine = new CommandLine( "cmd.exe" );
+        } else {
+            cmdLine = new CommandLine( tool );
+        }
 
-        for ( String arg : args ) {
-            cmdLine.addArgument( arg );
+        for ( CommandArg < String, Boolean > arg : args ) {
+            cmdLine.addArgument( arg.arg, arg.quoting );
         }
 
         ByteArrayOutputStream stdOut = new ByteArrayOutputStream( );
@@ -79,13 +92,6 @@ public class GGPKUtils {
     }
 
     /**
-     * Adds all the File keys to a list.
-     */
-    public static List < File > getFilesFromMap ( Map < File, List < String > > map ) {
-        return new ArrayList <>( map.keySet( ) );
-    }
-
-    /**
      * Reads all lines from the provided uiimages.txt file and splits them into an array.
      * <br>
      * The first index is the texture name, the second index is the .dds file path in the gppk file,
@@ -112,6 +118,8 @@ public class GGPKUtils {
 
     /**
      * Gets all the textures stored in the .dds file of the provided gppk path.
+     *
+     * @deprecated Used in the old GGPK.java class.
      */
     public static List < String > getAllTexturesFor1( File uiimagesTxt, String gppkDDSFilePath ) {
         List < String > textures = new ArrayList <>(  );
@@ -196,7 +204,6 @@ public class GGPKUtils {
         return textures;
 
     }
-
 
     /**
      * Gets a textures x,y coordinates from the provided uiimages.txt line.

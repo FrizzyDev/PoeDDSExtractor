@@ -1,16 +1,12 @@
 package com.github.frizzy.PoeDDSExtractor.Testing;
 
-import com.github.frizzy.PoeDDSExtractor.DDSFile;
+import com.github.frizzy.PoeDDSExtractor.DDS.DDSFile;
 import com.github.frizzy.PoeDDSExtractor.GGPKUtils;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Showcases how you could build a wanted textures list dependent on the wanted .dds files.

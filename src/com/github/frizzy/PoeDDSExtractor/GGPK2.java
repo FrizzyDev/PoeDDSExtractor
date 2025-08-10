@@ -1,5 +1,11 @@
 package com.github.frizzy.PoeDDSExtractor;
 
+import com.github.frizzy.PoeDDSExtractor.Bank.BankFile;
+import com.github.frizzy.PoeDDSExtractor.Command.CommandArg;
+import com.github.frizzy.PoeDDSExtractor.Command.CommandPair;
+import com.github.frizzy.PoeDDSExtractor.DDS.DDSFile;
+import com.github.frizzy.PoeDDSExtractor.DDS.Texture;
+import com.github.frizzy.PoeDDSExtractor.Exception.GGPKException;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.io.FilenameUtils;
@@ -44,7 +50,18 @@ public class GGPK2 {
     static final String UIIMAGES_TXT_LOC = "art/uiimages1.txt";
 
     static final String UIDIVINATION_TXT_LOC = "art/uidivinationimages.txt";
+
+    /**
+     * Previously, two different tools were needed for certain extraction proceses.
+     * <br>
+     * ExtractGGPK.exe has been updated to handle .dds files and bank files, and
+     * process Content.ggpk or _.index.bin files.
+     * <br>
+     * I would note that ExtractGGPK.exe is not an exe/dll retrieved from the LibGGPK3
+     * library, but something I wrote to streamline the process a bit better.
+     */
     @SuppressWarnings( "unused" )
+    @Deprecated
     static final String BUNDLED_GGPK_TOOL = "ExtractBundledGGPK3.exe";
 
     static final String GGPK_TOOL = "ExtractGGPK.exe";
@@ -54,17 +71,17 @@ public class GGPK2 {
      * This is used to extract bank files or files not stored
      * within the internal bundles, such as a .bank file.
      */
-    private Path extractGGPKexe;
+    private final Path extractGGPKexe;
 
     /**
      * Path to the uiimages.txt file on disk.
      */
-    private Path uiImagesDiskPath;
+    private final Path uiImagesDiskPath;
 
     /**
      * Path to the uidivinationimages.txt file on disk.
      */
-    private Path uiDivinationImagesDiskPath;
+    private final Path uiDivinationImagesDiskPath;
 
     /**
      * The path to the Content.gppk file.
@@ -100,9 +117,7 @@ public class GGPK2 {
         this.contentPath = contentPath;
         this.overwrite = overwrite;
 
-        Optional < Path > bgtOpt = getGPPKExe( ggpkPath , BUNDLED_GGPK_TOOL );
-        Optional < Path > egOpt = getGPPKExe( ggpkPath , GGPK_TOOL );
-
+        Optional < Path > egOpt = getGPPKExe( ggpkPath );
 
         extractGGPKexe = egOpt.orElseThrow( ( ) -> new FileNotFoundException( "ExtractGGPK3.exe was not found." ) );
 
@@ -375,12 +390,20 @@ public class GGPK2 {
 
         String extension = FilenameUtils.getExtension( wantedFile );
         String temp = wantedFile.replaceAll( "/" , "_" ).replace( ".txt" , "" );
-
         Path outputDir = Path.of ( outputPath.toString( ) + File.separator + temp );
+
+        Path potentialCur = Path.of( outputDir + File.separator + Path.of( wantedFile.substring( wantedFile.lastIndexOf( "/" ) ) ) );
+        if ( Files.exists( potentialCur ) && !overwrite ) {
+            return Optional.of( potentialCur );
+        } else if ( Files.exists( potentialCur ) && overwrite ) {
+            boolean deleted = Files.deleteIfExists( potentialCur );
+            LOGGER.log( Level.INFO, "Deletion success of: " + potentialCur + " - " + deleted );
+        }
+
         final String subbed = wantedFile.substring( wantedFile.lastIndexOf( "/" ) + 1 );
 
-        if ( ( overwrite && Files.exists( outputDir ) ) || !Files.exists( outputDir ) || extension.equalsIgnoreCase( "bank" ) ) {
-            if ( !extension.equalsIgnoreCase( "bank" ) ) {
+        if ( ( overwrite && Files.exists( outputDir ) ) || !Files.exists( outputDir ) ) {
+            if ( !Files.exists( outputDir ) ) {
                 Path created = Files.createDirectory( outputDir );
 
                 if ( !Files.exists( created ) && !overwrite ) {
@@ -390,7 +413,8 @@ public class GGPK2 {
             }
 
             CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > cPair = GGPKUtils.runCommandLine(
-                    extractGGPKexe, contentPath.toString(), wantedFile, outputDir.toString() );
+                    extractGGPKexe, new CommandArg <>( contentPath.toString( ) , true ),
+                    new CommandArg <>( wantedFile, true ), new CommandArg <> ( outputDir.toString() , true ) ) ;
             try {
                 cPair.rh.waitFor();
             } catch ( InterruptedException e ) {
@@ -399,18 +423,15 @@ public class GGPK2 {
             }
 
             int exitValue = cPair.rh.getExitValue();
-
             LOGGER.log( Level.INFO , cPair.bs.toString() );
 
             if ( exitValue == 0 ) {
-
                 try ( Stream < Path > paths = Files.list( outputDir ) ) {
                     List < Path > pathList = paths.toList();
 
                     for ( Path p : pathList ) {
                         if ( p.getFileName().toString().equalsIgnoreCase( subbed ) ) {
                             LOGGER.log( Level.INFO , "FILE SUCCESSFULLY EXTRACTED: " + p.toAbsolutePath() );
-
                             return Optional.of( p );
                         }
                     }
@@ -470,7 +491,7 @@ public class GGPK2 {
         final Path path = Path.of( outputDir + File.separator + subbed + "_path.txt" );
 
         if ( ( overwrite && Files.exists( outputDir ) ) || !Files.exists( outputDir ) || extension.equalsIgnoreCase( "bank" ) ) {
-            if ( !wantedFile.contains( ".bank" ) ) {
+            if ( !wantedFile.contains( ".bank" ) && !Files.exists( outputDir ) ) {
                 Path created = Files.createDirectory( outputDir );
 
                 if ( !Files.exists( created ) && !overwrite ) {
@@ -480,7 +501,14 @@ public class GGPK2 {
             }
 
             CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > cPair = GGPKUtils.runCommandLine(
-                    extractGGPKexe , contentPath.toString( ) , wantedFile , outputDir.toString( ) );
+                    extractGGPKexe , new CommandArg <>( contentPath.toString( ), true ) ,
+                    new CommandArg <>( wantedFile, true ), new CommandArg <>( outputDir.toString( ), true ) );
+
+            try {
+                cPair.rh.waitFor();
+            } catch ( InterruptedException e ) {
+                LOGGER.log( Level.SEVERE, e.getMessage(), e);
+            }
 
             int exitCode = cPair.rh.getExitValue( );
 
@@ -585,15 +613,15 @@ public class GGPK2 {
     }
 
     /**
-     * Attempts to retrieve the ExtractBundledGGPK3.exe or ExtractGGPK.exe and returns an Optional instance.
+     * Attempts to retrieve the ExtractGGPK.exe and returns an Optional instance.
      */
-    private Optional < Path > getGPPKExe( Path ggpkPath , String TOOL ) {
+    private Optional < Path > getGPPKExe( Path ggpkPath ) {
         if ( Files.isDirectory( ggpkPath) ) {
             try ( Stream < Path > paths = Files.list( ggpkPath ) ) {
                 List < Path > pathList = paths.toList();
 
                 for ( Path p : pathList ) {
-                    if ( p.getFileName().toString().equalsIgnoreCase( TOOL ) ) {
+                    if ( p.getFileName().toString().equalsIgnoreCase( GGPK_TOOL ) ) {
                         return Optional.of( p );
                     }
                 }

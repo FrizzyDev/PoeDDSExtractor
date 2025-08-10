@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * @author Frizzy
  * @version 0.0.1
  * @since 0.0.1
- * @deprecated Replaced by GGPK2
+ * @deprecated Replaced by GGPK2, do not use, not functional
  */
 public class GGPK {
 
@@ -188,7 +188,7 @@ public class GGPK {
     public Map < File, List < String > > extractEverything ( final Path outputPath, File uiimagesTxt ) {
         Map < File, List < String > > allFiles = new HashMap <>(  );
 
-        List < String [ ] > gppkFiles = GGPKUtils.getAllLinesSplit( uiimagesTxt );
+        List < String [ ] > gppkFiles = GGPKUtils.getAllLinesSplit( null );
         /*
          * Validation list tracks what .dds files have already been extracted, as the uiimages.txt will
          * have the .dds file paths referenced multiple times.

@@ -1,15 +1,16 @@
 package com.github.frizzy.PoeDDSExtractor.Testing;
 
 import com.github.frizzy.PoeDDSExtractor.*;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecuteResultHandler;
-import org.apache.commons.exec.DefaultExecutor;
+import com.github.frizzy.PoeDDSExtractor.Bank.BankExtractor;
+import com.github.frizzy.PoeDDSExtractor.Bank.BankFile;
+import com.github.frizzy.PoeDDSExtractor.DDS.DDSConverter2;
+import com.github.frizzy.PoeDDSExtractor.DDS.DDSExtractor2;
+import com.github.frizzy.PoeDDSExtractor.DDS.DDSFile;
+import com.github.frizzy.PoeDDSExtractor.DDS.Texture;
+import com.github.frizzy.PoeDDSExtractor.Exception.GGPKException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -18,24 +19,11 @@ import java.util.concurrent.TimeUnit;
 public class Test {
 
     public static void main( String[] args ) throws IOException, GGPKException, InterruptedException {
-        String ggpkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3";
-        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Bundles2\\_.index.bin" );
+        Path ggpkLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\LibGGPK3\\" );
+        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
-        Path tool = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\LibGGPK3\\ExtractGGPK.exe" );
-        String asset = "Art/Textures/Interface/2D/2DArt/UIImages/Common/1.dds";
 
-        CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > pair = GGPKUtils.runCommandLine(
-                tool, "ggpk", contentLocation.toString(), asset, outputLocation.toString() );
-
-        pair.rh.waitFor();
-
-        if ( pair.rh.getExitValue() == 0 ) {
-            System.out.println( pair.bs.toString() );
-        } else {
-            System.out.println( pair.bs.toString() );
-        }
-
-
+        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
     }
 
     public static void testBank ( ) throws FileNotFoundException, GGPKException {
@@ -70,14 +58,14 @@ public class Test {
         return list;
     }
 
-    public void testGGPK2 ( ) throws IOException, GGPKException {
-        Path ggpkLocation = Path.of( "C:\\Users\\frizz\\OneDrive\\Desktop\\LibGGPK3" );
+    public static void testGGPK2( ) throws IOException, GGPKException {
+        Path ggpkLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\LibGGPK3\\" );
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
         Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
         Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
 
-        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
+        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, false );
 
         List < DDSFile > ddsFiles = ggpk.extractDDS( outputLocation, buildWantedFiles() );
 
@@ -113,182 +101,6 @@ public class Test {
         }
     }
 
-    public static void testAudio ( ) throws IOException {
-        final String bmsExePath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\quickbms.exe";
-        final String bmsScriptPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\Script.bms";
-        final String fmodExtractPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\fsb_aud_extr.exe";
-        final String fsbPath = "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\00000000.fsb";
-        //final String command = "for %i in (\"C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\"*.fsb) do fsb_aud_extr.exe \"%i\"";
-
-        CommandLine cmdLine = new CommandLine( bmsExePath );
-
-        cmdLine.addArgument( bmsScriptPath );
-        cmdLine.addArgument( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\UI_General.bank" );
-        cmdLine.addArgument( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing" );
-
-        DefaultExecutor executor = DefaultExecutor.builder().get();
-        int code = executor.execute( cmdLine );
-
-        CommandLine cmdLine2 = new CommandLine( fmodExtractPath );
-
-        cmdLine2.addArgument( fsbPath );
-        cmdLine2.addArgument( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\Output" );
-
-
-//        CommandLine cmdLine2 = new CommandLine( "cmd.exe" );
-//        cmdLine2.addArgument( "/C \"\"C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing\\batch.bat\"\"", false );
-//
-//        DefaultExecutor executor1 = DefaultExecutor.builder().get();
-//
-//        int code2 = executor1.execute( cmdLine2 );
-
-    }
-
-    public static void gatherPNGTest ( ) throws FileNotFoundException {
-        String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\win-x64";
-        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
-        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Output" );
-        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
-        Optional < File >  opt = gppk.extractUIImagesTXT( outputLocation );
-
-        opt.ifPresent( uiimagestxt -> {
-            List < File > ddsFiles = GGPKUtils.gatherPNGFrom( outputLocation );
-            Map < File , List < String > > allTextures = new HashMap <>(  );
-
-            for ( File pngFile : ddsFiles ) {
-                File txt = new File( pngFile.getParentFile().getAbsolutePath() + File.separator + "path.txt" );
-
-                if ( txt.exists() ) {
-                    try {
-                        String path = Files.readString( txt.toPath() );
-                        List < String > textures = GGPKUtils.getAllTexturesFor1( uiimagestxt, path );
-
-                        allTextures.put( pngFile, textures );
-
-                    } catch ( IOException e ) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            DDSExtractor extractor = new DDSExtractor( uiimagestxt, false );
-            Map < File , List < File > > allExtracted = extractor.extractSubTextures( allTextures );
-        } );
-    }
-
-    public static void extractAllTest ( ) throws FileNotFoundException {
-        String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\win-x64";
-        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
-        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Output" );
-        Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
-        Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
-
-        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
-        /*
-         * Anytime you read the uiimages.txt file, make sure the encoding is set to StandardCharsets.UTF_16LE
-         */
-        Optional < File >  opt = gppk.extractUIImagesTXT( outputLocation );
-        Map < File , List < String > > allTextures = new HashMap <>(  );
-
-        opt.ifPresent( uiimagestxt -> {
-            List < File > ddsFiles = GGPKUtils.gatherDDSFrom( outputLocation );
-            DDSConverter converter = new DDSConverter( convertBatLocation, texConvLocation, false );
-            List < File> convertedDDSFiles = converter.convert( ddsFiles );
-
-            for ( File pngFile : convertedDDSFiles ) {
-                File txt = new File( pngFile.getParentFile().getAbsolutePath() + File.separator + "path.txt" );
-
-                if ( txt.exists() ) {
-                    try {
-                        String path = Files.readString( txt.toPath() );
-                        List < String > textures = GGPKUtils.getAllTexturesFor1( uiimagestxt, path );
-
-                        allTextures.put( pngFile, textures );
-                    } catch ( IOException e ) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            DDSExtractor extractor = new DDSExtractor(  uiimagestxt , false );
-            extractor.extractSubTextures( allTextures );
-        } );
-    }
-
-    public static void gatherDDSTest ( ) throws FileNotFoundException {
-        String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\win-x64";
-        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
-        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Output" );
-        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
-        Optional < File >  opt = gppk.extractUIImagesTXT(  outputLocation );
-
-        opt.ifPresent( uiimagestxt -> {
-            List < File > ddsFiles = GGPKUtils.gatherDDSFrom( outputLocation );
-            Map < File , List < String > > allTextures = new HashMap <>(  );
-
-            int ddsCounter = 0;
-            int textureCounter = 0;
-
-            for ( File ddsFile : ddsFiles ) {
-                File txt = new File( ddsFile.getParentFile().getAbsolutePath() + File.separator + "path.txt" );
-
-                if ( txt.exists() ) {
-                    try {
-                        String path = Files.readString( txt.toPath() );
-                        List < String > textures = GGPKUtils.getAllTexturesFor1( uiimagestxt, path );
-
-                        allTextures.put( ddsFile, textures );
-
-                        ddsCounter++;
-                        textureCounter = textureCounter + textures.size();
-                    } catch ( IOException e ) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            System.out.println( ddsCounter + " .dds files extracted with a total of: " + textureCounter + " textures waiting to be extracted." );
-        } );
-    }
-
-    /**
-     * Extracts all .dds files, converts all files, then extracts all textures from each png file.
-     * This can take a few hours.
-     * @throws FileNotFoundException
-     */
-    public static void allTest ( ) throws FileNotFoundException {
-        long startTime = System.nanoTime( );
-
-        /*
-         * Replace the wanted files with the paths of whatever you want to extract, and the source
-         * directories below where the required files are.
-         */
-        String gppkLocation = "C:\\Users\\frizz\\OneDrive\\Desktop\\win-x64";
-        Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
-        Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
-        Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
-        Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
-
-        ToolsUnpacker up = new ToolsUnpacker();
-        up.exportBat( convertBatLocation );
-        System.exit( 0 );
-
-        GGPK gppk = new GGPK( gppkLocation, contentLocation, false, true );
-        Optional < File > opt = gppk.extractUIImagesTXT( outputLocation );
-        opt.ifPresent( uiimagestxt -> {
-            gppk.setOverwrite( false );
-            Map < File, List < String > > allTextures = gppk.extractEverything( outputLocation, uiimagestxt );
-            DDSConverter converter = new DDSConverter( convertBatLocation, texConvLocation, false );
-            converter.convert( GGPKUtils.getFilesFromMap( allTextures ) );
-            DDSExtractor extractor = new DDSExtractor( uiimagestxt, false  );
-            extractor.extractSubTextures( allTextures );
-        } );
-
-        long endTime = System.nanoTime();
-        long elapsedTime = endTime - startTime;
-
-        System.out.println( "Extract everything took: " + getHumanReadableTime( elapsedTime ) );
-    }
 
     public static List < String > buildWantedFiles( ) {
         List < String > wantedFiles = new ArrayList <>( );
