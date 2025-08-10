@@ -19,8 +19,9 @@ PoeDDSExtractor usage for extracting everything can look like this:
 ```java
 //GGPK.java still exists, but use GGPK2.java instead, the process is more streamlined and easier to follow.
 
-//Download LibGGPK3 and texconv.exe to desired folder here using ToolsUnpacker
-//Extract LibGGPK3 to desired folder here using ToolsUnpacker
+
+//Extract LibGGPK3 tools, texconv tool, and convert tool to desired locations first. They can be reused.
+//Due to the way bank decoding works, the bank_tools.zip is extracted to neccessary folders.
 //When instantiating GGPK, it'll attempt to export the ExtractGGPK.exe needed for bank files.
 
 Path gppkLocation = ...
