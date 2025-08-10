@@ -35,20 +35,12 @@ public class DDSConverter2 {
     static final String TEXCONV_EXE = "texconv.exe";
 
     /**
-     * File reference to the original location of the convert.bat file.
-     * <br>
-     * convert.bat is not removed from this location, just copied to the required
-     * directories for .dds conversion.
-     */
-    private File convertBat;
-
-    /**
      * File reference to the original location of the texconv.exe file.
      * <br>
      * texconv is not removed from this location, just copied to the required
      * directories for .dds conversion.
      */
-    private File texConv;
+    private Path texConvPath;
 
     /**
      * Boolean flag determining if previously converted .dds files should be overwritten.
@@ -61,9 +53,8 @@ public class DDSConverter2 {
      * Creates the DDSConverter instance with the path to the convert.bat file, texconv.exe file, and if
      * previously converted .dds files should be overwritten or not.
      */
-    public DDSConverter2( Path convertBatPath, Path texConvPath, boolean overwrite ) {
-        this.convertBat = convertBatPath.toFile();
-        this.texConv = texConvPath.toFile();
+    public DDSConverter2( Path texConvPath, boolean overwrite ) {
+        this.texConvPath = texConvPath;
         this.overwrite = overwrite;
     }
 
@@ -90,7 +81,6 @@ public class DDSConverter2 {
      */
     public List < DDSFile > convert ( List < DDSFile > ddsFiles ) {
         //The directory that convert.bat and texconv.exe will be copied to.
-        Path converterOutLoc = null;
 
         for ( DDSFile ddsFile : ddsFiles ) {
             Path ref = ddsFile.getDiskPath();
@@ -98,43 +88,19 @@ public class DDSConverter2 {
             if ( ref.getFileName().toString().endsWith( ".dds" ) ) {
                 Path pngFile = Path.of ( ref.toAbsolutePath().toString().replace( ".dds", ".png" ) );
 
-                if ( ( Files.exists( pngFile )  && overwrite ) || !Files.exists( pngFile ) ) {
-                    converterOutLoc = ref.getParent ( );
-                    copyConverterTo( converterOutLoc );
+                if ( ( Files.exists( pngFile ) && overwrite ) || !Files.exists( pngFile ) ) {
 
                     try {
-                        Optional < Path > opt = executeConvert( ref, converterOutLoc );
+                        Optional < Path > opt = executeConvert( ref );
 
                         if ( opt.isPresent() ) {
-                            ddsFile.setPNGPath( pngFile );
+                            ddsFile.setPNGPath( opt.get() );
                         } else {
                             LOGGER.log( Level.WARNING, "No png file was returned." );
                         }
                     } catch ( IOException e ) {
                         LOGGER.log( Level.SEVERE, e.getMessage(), e );
                     }
-                }
-            }
-
-            //Conversion is done, delete the .bat and .exe files.
-            if ( converterOutLoc != null ) {
-                LOGGER.log( Level.INFO, "Deleting convert.bat and texconv.exe." );
-                Path batFile = Path.of ( converterOutLoc.toAbsolutePath() + File.separator + CONVERT_BAT );
-                Path exeFile = Path.of ( converterOutLoc.toAbsolutePath() + File.separator + TEXCONV_EXE );
-
-                try {
-                    boolean batDeleted = Files.deleteIfExists( batFile );
-                    boolean exeDeleted = Files.deleteIfExists( exeFile );
-
-                    if ( !batDeleted ) {
-                        LOGGER.log( Level.WARNING, "convert.bat was not deleted." );
-                    }
-
-                    if ( !exeDeleted ) {
-                        LOGGER.log( Level.WARNING, "texconv.exe was not deleted." );
-                    }
-                } catch ( IOException e ) {
-                    LOGGER.log( Level.SEVERE, e.getMessage(), e );
                 }
             }
         }
@@ -147,47 +113,21 @@ public class DDSConverter2 {
      * <br>
      * Returns the created .png file.
      */
-    private Optional < Path > executeConvert ( Path ddsFile, Path converterLoc ) throws IOException {
-        Path batFile = Path.of ( converterLoc.toAbsolutePath() + File.separator + CONVERT_BAT );
+    private Optional < Path > executeConvert ( Path ddsFile ) throws IOException {
+        Path outLocation = ddsFile.getParent();
+        String command = "\"\"" + ddsFile + "\"\" -srgb -ft png -f R8G8B8A8_UNORM_SRGB " + "-y -o \"\"" + outLocation + "\"\"";
 
         CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > cPair = GGPKUtils.runCommandLine(
-                Path.of( "cmd.exe" ), new CommandArg <>("/C " + "\"\"" + batFile.toAbsolutePath() + "\"\"", false  ) );
-
-        try {
-            cPair.rh.waitFor();
-        } catch ( InterruptedException e ) {
-            LOGGER.log( Level.SEVERE, e.getMessage(), e );
-        }
+                texConvPath , new CommandArg <>( command, false ) );
 
         int exitCode = cPair.rh.getExitValue();
         LOGGER.log( Level.INFO, cPair.bs.toString() );
 
         if ( exitCode == 0 ) {
             String name = ddsFile.getFileName().toString().replace( ".dds", ".png" );
-            return Optional.of( Path.of ( converterLoc.toAbsolutePath() + File.separator + name ) );
+            return Optional.of( Path.of ( ddsFile.getParent() + File.separator + name ) );
         }
 
         return Optional.empty();
-    }
-
-    /**
-     * Copies texconv.exe and convert.bat to the directory the dds file is located in.
-     */
-    private void copyConverterTo( final Path ddsFolder ) {
-            copy( convertBat, Path.of( ddsFolder.toAbsolutePath() + File.separator + CONVERT_BAT ) );
-            copy( texConv, Path.of( ddsFolder.toAbsolutePath() + File.separator + TEXCONV_EXE ) );
-    }
-
-    /**
-     * Completes copy process.
-     */
-    private void copy( File batOrTexconv, Path out ) {
-
-        try {
-            Files.copy( batOrTexconv.toPath(), out, StandardCopyOption.REPLACE_EXISTING );
-            LOGGER.log( Level.INFO, "File: " + batOrTexconv.getAbsolutePath() + " was copied to: " + out );
-        } catch ( IOException e ) {
-            LOGGER.log( Level.SEVERE, e.getMessage(), e );
-        }
     }
 }

@@ -109,12 +109,6 @@ public class BankExtractor {
                 new CommandArg <>( bankFile.toAbsolutePath().toString(), true ),
                 new CommandArg <>( bankOutputDir.toAbsolutePath().toString() , true ) );
 
-        try {
-            cPair.rh.waitFor();
-        } catch ( InterruptedException e ) {
-            LOGGER.log( Level.SEVERE, e.getMessage(), e );
-        }
-
         int bmsExitCode = cPair.rh.getExitValue();
 
         if ( bmsExitCode == 0 ) {

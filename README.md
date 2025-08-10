@@ -17,25 +17,35 @@ Now time for the fun!
 PoeDDSExtractor usage for extracting everything can look like this:
 
 ```java
+//Extract LibGGPK3 to desired folder here using ToolsUnpacker
+Path zipPath = "<pathing>/LibGGPK3.zip";
+Path outPath = "<pathingToDirectoryOfTheZipFile>";
+Path texPath = "<pathing>/texconv.exe";
+
+ToolsUnpacker unpacker = new ToolsUnpacker();
+unpacker.exportGGPKToolsTo ( zipPath, outPath );
+unpacker.exportTexConvTo ( texConv );
+
+//Now the required external tools are extracted, save the paths to somewhere.
+//The exported tools can be reused anytime.
+
+//GGPK2, DDSConverter, and BankExtractor are thread blocking,
+// and it is recommended you utilize these in separate threads of your app.
+
 //GGPK.java still exists, but use GGPK2.java instead, the process is more streamlined and easier to follow.
 
-//Download LibGGPK3 and texconv.exe to desired folder here using ToolsUnpacker
-//Extract LibGGPK3 to desired folder here using ToolsUnpacker
-//When instantiating GGPK, it'll attempt to export the ExtractGGPK.exe needed for bank files.
+Path gppkLocation = ... //Location of LibGGPK3 tools
+Path contentLocation = ... //Location of the Content.ggpk or _.index.bin files.
+Path outputLocation = ... //Location extract files will be saved to.
+Path texConvLocation = ... //Location of the DirectXTex texconv tool
 
-Path gppkLocation = ...
-Path contentLocation = ...
-Path outputLocation = ...
-Path convertBatLocation = ...
-Path texConvLocation = ...
+GGPK2 ggpk = new GGPK2( ggpkLocation , contentLocation , false , true );
+List < DDSFile > ddsFiles = ggpk.extract( outputLocation , buildWantedFiles( ) );
 
-GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
-List < DDSFile > ddsFiles = ggpk.extract( outputLocation, buildWantedFiles() );
-
-DDSConverter2 converter = new DDSConverter2( convertBatLocation, texConvLocation, true );
+DDSConverter2 converter = new DDSConverter2( texConvLocation , true );
 ddsFiles = converter.convert( ddsFiles );
 
-DDSExtractor2 extractor = new DDSExtractor2( ggpk.getuiImagesTxtFile(), true  );
+DDSExtractor2 extractor = new DDSExtractor2( ggpk.getuiImagesTxtFile( ) , true );
 ddsFiles = extractor.extractSubTextures( ddsFiles );
 //Do what you want after this. Each DDSFile in the list will now contain the .dds file, converted .png file, list of textures in the .dds file, and a list of extracted textures.
 ```

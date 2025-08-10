@@ -38,6 +38,10 @@ public class GGPKUtils {
      * Builds a command line with the specified tool and arguments, then executes the command line.
      * The ResultHandler and ByteArrayOutputStream set to the executor are returned via CommandPair,
      * where the exit code and stream can be called on.
+     * <br>
+     * Since the resulting CommandPair is required to continue, this method waits for the executor to
+     * finish executing.
+     *
      */
     @SafeVarargs
     public static CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > runCommandLine ( final Path tool, CommandArg < String, Boolean >... args ) throws IOException {
@@ -60,6 +64,12 @@ public class GGPKUtils {
         executor.setStreamHandler( psh );
         executor.setExitValue( 0 );
         executor.execute( cmdLine, handler );
+
+        try {
+            handler.waitFor();
+        } catch ( InterruptedException e ) {
+            LOGGER.log( Level.SEVERE, e.getMessage(), e );
+        }
 
         return new CommandPair <>( handler, stdOut );
     }

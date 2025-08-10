@@ -97,32 +97,20 @@ public class GGPK2 {
     private boolean overwrite;
 
     /**
-     * Unused currently.
-     */
-    private boolean duplicate;
-
-    /**
-     * Unused currently.
-     */
-    private int duplicateValue = 2;
-
-    /**
      * @param ggpkPath    Path to the directory containing the LibGPPK tools.
      * @param contentPath Path to the content.gppk file.
-     * @param duplicate   Duplicates the content.gppk files to perform the extraction process faster by
-     *                    being able to execute ExtractBundledGGPK3.exe multiple times at once.
      * @param overwrite   Determines if previously extracted files should be overwritten.
      */
-    public GGPK2( final Path ggpkPath , Path contentPath , boolean duplicate , boolean overwrite ) throws FileNotFoundException, GGPKException {
+    public GGPK2( final Path ggpkPath , Path contentPath, boolean overwrite ) throws FileNotFoundException, GGPKException {
+        if ( !Files.exists( contentPath ) )
+            throw new FileNotFoundException( "Content.gppk was not found" );
+
         this.contentPath = contentPath;
         this.overwrite = overwrite;
 
         Optional < Path > egOpt = getGPPKExe( ggpkPath );
 
         extractGGPKexe = egOpt.orElseThrow( ( ) -> new FileNotFoundException( "ExtractGGPK3.exe was not found." ) );
-
-        if ( !Files.exists( contentPath ) )
-            throw new FileNotFoundException( "Content.gppk was not found" );
 
         uiImagesDiskPath = extractUIImagesTXT( ggpkPath )
                 .orElseThrow( ( ) ->
@@ -159,13 +147,6 @@ public class GGPK2 {
      */
     public void setOverwrite( boolean overwrite ) {
         this.overwrite = overwrite;
-    }
-
-    /**
-     * Sets the amount of times the content.gppk file should be duplicated.
-     */
-    public void setDuplicateValue( int newValue ) {
-        this.duplicateValue = newValue;
     }
 
     /**
@@ -383,12 +364,19 @@ public class GGPK2 {
         return Optional.empty( );
     }
 
+    /**
+     * Finishes the extraction process for extracting the uiimages.txt or uidivinationimages.txt file.
+     *
+     * @param outputPath The directory the .txt file will be extracted to.
+     * @param wantedFile Which .txt file is requested, either the uiimages.txt or uidivinationimages.txt file.
+     * @return
+     * @throws IOException
+     */
     private Optional < Path > extractTextFile( Path outputPath , String wantedFile ) throws IOException {
         if ( GGPKUtils.testLock( contentPath ) ) {
             throw new IOException( "Content.ggpk file is locked. Check to see if another tool is currently using the file." );
         }
 
-        String extension = FilenameUtils.getExtension( wantedFile );
         String temp = wantedFile.replaceAll( "/" , "_" ).replace( ".txt" , "" );
         Path outputDir = Path.of ( outputPath.toString( ) + File.separator + temp );
 
@@ -415,12 +403,6 @@ public class GGPK2 {
             CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > cPair = GGPKUtils.runCommandLine(
                     extractGGPKexe, new CommandArg <>( contentPath.toString( ) , true ),
                     new CommandArg <>( wantedFile, true ), new CommandArg <> ( outputDir.toString() , true ) ) ;
-            try {
-                cPair.rh.waitFor();
-            } catch ( InterruptedException e ) {
-                LOGGER.log( Level.SEVERE, e.getMessage(), e );
-                return Optional.empty();
-            }
 
             int exitValue = cPair.rh.getExitValue();
             LOGGER.log( Level.INFO , cPair.bs.toString() );
@@ -503,12 +485,6 @@ public class GGPK2 {
             CommandPair < DefaultExecuteResultHandler, ByteArrayOutputStream > cPair = GGPKUtils.runCommandLine(
                     extractGGPKexe , new CommandArg <>( contentPath.toString( ), true ) ,
                     new CommandArg <>( wantedFile, true ), new CommandArg <>( outputDir.toString( ), true ) );
-
-            try {
-                cPair.rh.waitFor();
-            } catch ( InterruptedException e ) {
-                LOGGER.log( Level.SEVERE, e.getMessage(), e);
-            }
 
             int exitCode = cPair.rh.getExitValue( );
 

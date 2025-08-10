@@ -3,12 +3,16 @@ package com.github.frizzy.PoeDDSExtractor.Testing;
 import com.github.frizzy.PoeDDSExtractor.*;
 import com.github.frizzy.PoeDDSExtractor.Bank.BankExtractor;
 import com.github.frizzy.PoeDDSExtractor.Bank.BankFile;
+import com.github.frizzy.PoeDDSExtractor.Command.CommandArg;
+import com.github.frizzy.PoeDDSExtractor.Command.CommandPair;
 import com.github.frizzy.PoeDDSExtractor.DDS.DDSConverter2;
 import com.github.frizzy.PoeDDSExtractor.DDS.DDSExtractor2;
 import com.github.frizzy.PoeDDSExtractor.DDS.DDSFile;
 import com.github.frizzy.PoeDDSExtractor.DDS.Texture;
 import com.github.frizzy.PoeDDSExtractor.Exception.GGPKException;
+import org.apache.commons.exec.DefaultExecuteResultHandler;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,12 +22,17 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings( "all" )
 public class Test {
 
+    //texconv.exe C:\Textures\my_texture.dds -ft png -o D:\Converted_Images
     public static void main( String[] args ) throws IOException, GGPKException, InterruptedException {
+
+    }
+
+    public static void testTxtExtract ( ) throws FileNotFoundException, GGPKException {
         Path ggpkLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\LibGGPK3\\" );
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
 
-        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
+        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, true );
     }
 
     public static void testBank ( ) throws FileNotFoundException, GGPKException {
@@ -31,7 +40,7 @@ public class Test {
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing" );
 
-        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, true );
+        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, true );
         List < BankFile > bankFiles = ggpk.extractBank( outputLocation, buildWantedBanks() );
 
         BankExtractor extractor = new BankExtractor("C:\\Users\\frizz\\Documents\\GGGFiles\\Bank testing"  );
@@ -62,17 +71,16 @@ public class Test {
         Path ggpkLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\LibGGPK3\\" );
         Path contentLocation = Path.of( "C:\\Program Files (x86)\\Grinding Gear Games\\Path of Exile\\Content.ggpk" );
         Path outputLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\Test" );
-        Path convertBatLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\convert.bat" );
         Path texConvLocation = Path.of( "C:\\Users\\frizz\\Documents\\GGGFiles\\texconv.exe" );
 
-        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false, false );
+        GGPK2 ggpk = new GGPK2( ggpkLocation, contentLocation, false );
 
         List < DDSFile > ddsFiles = ggpk.extractDDS( outputLocation, buildWantedFiles() );
 
         WantedTextureBuilder builder = new WantedTextureBuilder( ggpk.getuiImagesTxtFile() );
         ddsFiles = builder.buildWantedTextures( ddsFiles );
 
-        DDSConverter2 converter = new DDSConverter2( convertBatLocation, texConvLocation, true );
+        DDSConverter2 converter = new DDSConverter2( texConvLocation, true );
 
         ddsFiles = converter.convert( ddsFiles );
 
